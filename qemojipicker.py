@@ -58,6 +58,9 @@ class QCollapseGroup(QWidget):
     def widget(self):
         return self.__widget
 
+    def header(self) -> QLabel:
+        return self.__label
+
 
 
 class QEmojiGrid(QWidget):
@@ -89,16 +92,16 @@ class QEmojiPicker(QWidget):
         self.__categories = {}
         self.__current_emoji_label = QLabel()
         self.__menu_horizontal_layout = QHBoxLayout()
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
+        self.__scroll_area = QScrollArea()
+        self.__scroll_area.setWidgetResizable(True)
         content_widget = QWidget()
         self.__collapse_groups_layout = QVBoxLayout(content_widget)
-        scroll_area.setWidget(content_widget)
+        self.__scroll_area.setWidget(content_widget)
 
         self.__vertical_layout = QVBoxLayout()
         self.__vertical_layout.addLayout(self.__menu_horizontal_layout)
         self.__vertical_layout.addWidget(self.__line_edit)
-        self.__vertical_layout.addWidget(scroll_area)
+        self.__vertical_layout.addWidget(self.__scroll_area)
         self.__vertical_layout.addWidget(self.__current_emoji_label)
         self.setLayout(self.__vertical_layout)
         self.add_category("Smileys & Emotion", QIcon("assets/icons/face-smile-solid.svg"))
@@ -123,6 +126,7 @@ class QEmojiPicker(QWidget):
         shortcut_button.setFlat(True)
         shortcut_button.setIcon(icon)
         shortcut_button.clicked.connect(lambda: self.__collapse_all_but(category))
+        shortcut_button.clicked.connect(lambda: self.__move_to_category(category))
         self.__menu_horizontal_layout.addWidget(shortcut_button)
         collapse_group = QCollapseGroup(category, QEmojiGrid())
         self.__categories[category] = {"shortcut": shortcut_button, "group": collapse_group}
@@ -133,6 +137,10 @@ class QEmojiPicker(QWidget):
             if category_2 != category:
                 self.collapse_group(category_2).set_collapse(True)
         self.collapse_group(category).set_collapse(False)
+
+    def __move_to_category(self, category: str):
+        collapse_group = self.collapse_group(category)
+        self.__scroll_area.ensureWidgetVisible(collapse_group.header())
 
     def collapse_group(self, category: str) -> QCollapseGroup:
         return self.__categories[category]["group"]
