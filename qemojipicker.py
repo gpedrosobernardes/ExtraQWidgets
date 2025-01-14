@@ -1,5 +1,4 @@
 from ipaddress import collapse_addresses
-
 import emojis.db
 from PySide6 import QtCore
 from PySide6.QtCore import QEvent
@@ -7,7 +6,6 @@ from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QLabel, QGridLayout, QVBoxLayout, QPushButton, \
     QScrollArea
 from emojis.db import Emoji
-
 from utils import is_dark_mode, colorize_icon
 
 
@@ -25,7 +23,6 @@ class QColorResponsiveButton(QPushButton):
         if is_dark_mode():
             icon = colorize_icon(icon, "#FFFFFF")
         super().setIcon(icon)
-
 
 
 class QCollapseGroup(QWidget):
@@ -63,10 +60,22 @@ class QCollapseGroup(QWidget):
         return self.__label
 
 
-class QEmojiGrid(QWidget):
+class QEmojiButton(QPushButton):
     font = QFont()
     font.setPointSize(20)
 
+    def __init__(self, emoji: Emoji):
+        super().__init__(emoji.emoji)
+        self.__emoji = emoji
+        self.setStyleSheet("padding: 0; background-color: transparent;")
+        self.setFlat(True)
+        self.setFont(self.font)
+
+    def emoji(self) -> Emoji:
+        return self.__emoji
+
+
+class QEmojiGrid(QWidget):
     def __init__(self):
         super().__init__()
         self.__grid_layout = QGridLayout()
@@ -74,16 +83,17 @@ class QEmojiGrid(QWidget):
         self.setLayout(self.__grid_layout)
 
     def add_emoji(self, emoji: Emoji, enter_callback = None, leave_callback = None):
-        button = QPushButton(emoji.emoji)
-        button.setStyleSheet("padding: 0; background-color: transparent;")
-        button.setFlat(True)
-        button.setFont(self.font)
+        button = QEmojiButton(emoji)
         button.enterEvent = lambda event: enter_callback(emoji)
         button.leaveEvent = lambda event: leave_callback()
         children_count = self.layout().count()
         row = children_count // 9
         column = children_count % 9
         self.__grid_layout.addWidget(button, row, column)
+
+    def emojis(self) -> list[QEmojiButton]:
+        return list(filter(lambda emoji_button: isinstance(emoji_button, QEmojiButton), self.children()))
+
 
 class QEmojiPicker(QWidget):
     bottom_font = QFont()
