@@ -116,9 +116,9 @@ class QEmojiPicker(QWidget):
         self.add_category('Flags', QIcon("assets/icons/flag-solid.svg"))
         self.__insert_emojis("Flags")
 
-
     def add_category(self, category: str, icon: QIcon):
-        button = QPushButton()
+        button = QColorResponsiveButton()
+        button.setFlat(True)
         button.setIcon(icon)
         self.__menu_horizontal_layout.addWidget(button)
         collapse_group = QCollapseGroup(category, QEmojiGrid())
