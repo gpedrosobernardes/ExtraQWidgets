@@ -1,3 +1,5 @@
+from ipaddress import collapse_addresses
+
 import emojis.db
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QIcon, QFont
@@ -33,7 +35,7 @@ class QCollapseGroup(QWidget):
         self.__collapse_button = QColorResponsiveButton()
         self.__collapse_button.setIcon(QIcon("assets/icons/angle-down-solid.svg"))
         self.__collapse_button.setFlat(True)
-        self.__collapse_button.clicked.connect(self.__collapse)
+        self.__collapse_button.clicked.connect(lambda: self.set_collapse(not self.__collapsed))
         self.__label = QLabel(title)
         self.__header_layout = QHBoxLayout()
         self.__header_layout.addWidget(self.__collapse_button)
@@ -44,14 +46,14 @@ class QCollapseGroup(QWidget):
         self.__layout.addWidget(widget)
         self.setLayout(self.__layout)
 
-    def __collapse(self):
-        if self.__collapsed:
-            self.__widget.show()
-            self.__collapse_button.setIcon(QIcon("assets/icons/angle-down-solid.svg"))
-        else:
+    def set_collapse(self, collapse: bool):
+        if collapse:
             self.__widget.hide()
             self.__collapse_button.setIcon(QIcon("assets/icons/angle-right-solid.svg"))
-        self.__collapsed = not self.__collapsed
+        else:
+            self.__widget.show()
+            self.__collapse_button.setIcon(QIcon("assets/icons/angle-down-solid.svg"))
+        self.__collapsed = collapse
 
     def widget(self):
         return self.__widget
@@ -117,16 +119,29 @@ class QEmojiPicker(QWidget):
         self.__insert_emojis("Flags")
 
     def add_category(self, category: str, icon: QIcon):
-        button = QColorResponsiveButton()
-        button.setFlat(True)
-        button.setIcon(icon)
-        self.__menu_horizontal_layout.addWidget(button)
+        shortcut_button = QColorResponsiveButton()
+        shortcut_button.setFlat(True)
+        shortcut_button.setIcon(icon)
+        shortcut_button.clicked.connect(lambda: self.__collapse_all_but(category))
+        self.__menu_horizontal_layout.addWidget(shortcut_button)
         collapse_group = QCollapseGroup(category, QEmojiGrid())
-        self.__categories[category] = collapse_group
+        self.__categories[category] = {"shortcut": shortcut_button, "group": collapse_group}
         self.__collapse_groups_layout.addWidget(collapse_group)
 
+    def __collapse_all_but(self, category: str):
+        for category_2 in self.__categories.keys():
+            if category_2 != category:
+                self.collapse_group(category_2).set_collapse(True)
+        self.collapse_group(category).set_collapse(False)
+
+    def collapse_group(self, category: str) -> QCollapseGroup:
+        return self.__categories[category]["group"]
+
     def emoji_grid(self, category: str) -> QEmojiGrid:
-        return self.__categories[category].widget()
+        return self.__categories[category]["group"].widget()
+
+    def shortcut(self, category: str) -> QColorResponsiveButton:
+        return self.__categories[category]["shortcut"]
 
     def __insert_emojis(self, category: str):
         emoji_grid = self.emoji_grid(category)
