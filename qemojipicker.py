@@ -101,6 +101,18 @@ class QEmojiPicker(QWidget):
         self.__insert_emojis("Smileys & Emotion")
         self.add_category("Animals & Nature", QIcon("assets/icons/leaf-solid.svg"))
         self.__insert_emojis("Animals & Nature")
+        self.add_category("Food & Drink", QIcon("assets/icons/bowl-food-solid.svg"))
+        self.__insert_emojis("Food & Drink")
+        self.add_category("Activities", QIcon("assets/icons/gamepad-solid.svg"))
+        self.__insert_emojis("Activities")
+        self.add_category('Travel & Places', QIcon("assets/icons/bicycle-solid.svg"))
+        self.__insert_emojis('Travel & Places')
+        self.add_category('Objects', QIcon("assets/icons/lightbulb-solid.svg"))
+        self.__insert_emojis('Objects')
+        self.add_category("Symbols", QIcon("assets/icons/heart-solid.svg"))
+        self.__insert_emojis('Symbols')
+        self.add_category('Flags', QIcon("assets/icons/flag-solid.svg"))
+        self.__insert_emojis("Flags")
 
 
     def add_category(self, category: str, icon: QIcon):
