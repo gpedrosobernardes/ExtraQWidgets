@@ -1,6 +1,6 @@
 import typing
 
-from PySide6.QtWidgets import QApplication, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QTextEdit
 
 
 class QResponsiveTextEdit(QTextEdit):
@@ -37,24 +37,3 @@ class QResponsiveTextEdit(QTextEdit):
     def insertFromMimeData(self, source):
         super().insertFromMimeData(source)
         self.__adjust_height()
-
-
-class MainWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("QTextEdit Auto-ajustável")
-
-        self.text_edit = QResponsiveTextEdit()
-        self.text_edit.setPlaceholderText("Digite algo...")
-        # self.text_edit.setMaximumHeight(500)
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.text_edit)
-        self.setLayout(layout)
-
-
-if __name__ == "__main__":
-    app = QApplication([])
-    window = MainWindow()
-    window.show()
-    app.exec()

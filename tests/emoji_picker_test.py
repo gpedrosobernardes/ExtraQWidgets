@@ -9,7 +9,7 @@ from widgets.emoji_picker.emoji_picker import QEmojiPicker
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowIcon(QIcon("assets/icons/face-smile-solid.svg"))
+        self.setWindowIcon(QIcon("../assets/icons/face-smile-solid.svg"))
 
         self.setWindowTitle("Emoji Picker Test")
 
