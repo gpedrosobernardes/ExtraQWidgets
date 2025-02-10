@@ -1,13 +1,15 @@
 import sys
 
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QMainWindow, QApplication, QLineEdit, QWidget, QVBoxLayout
 
-from qemojipicker import QEmojiPicker
+from widgets.emoji_picker.emoji_picker import QEmojiPicker
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowIcon(QIcon("assets/icons/face-smile-solid.svg"))
 
         self.setWindowTitle("Emoji Picker Test")
 
@@ -15,7 +17,9 @@ class MainWindow(QMainWindow):
 
         line_edit = QLineEdit()
         line_edit.setPlaceholderText("Enter your favorite emoji")
+
         emoji_picker = QEmojiPicker()
+        emoji_picker.picked.connect(lambda emoji: line_edit.insert(emoji.emoji))
 
         # center line_edit on widget
         layout = QVBoxLayout()
