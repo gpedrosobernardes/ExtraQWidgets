@@ -36,9 +36,10 @@ def emoji_to_code_point(emoji: Emoji):
 
 def get_emoji_path(emoji: Emoji) -> str:
     file_name = emoji_to_code_point(emoji)
-    path = Path(f"assets/emojis/{file_name}.png")
+    path = Path(__file__).parent.parent.parent.absolute() / f"assets/emojis/{file_name}.png"
     if path.exists():
         return str(path)
     else:
         file_name = "-".join(file_name.split("-")[:-1])
-        return f"assets/emojis/{file_name}.png"
+        path = Path(__file__).parent.parent.parent.absolute() / f"assets/emojis/{file_name}.png"
+        return str(path)
