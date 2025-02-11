@@ -1,7 +1,6 @@
 from PySide6.QtCore import QEvent
 from PySide6.QtWidgets import QPushButton
-
-from utils import colorize_icon, is_dark_mode
+from widgets.utils import is_dark_mode, colorize_icon
 
 
 class QColorResponsiveButton(QPushButton):
