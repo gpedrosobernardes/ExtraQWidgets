@@ -3,7 +3,7 @@ from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import QPushButton
 from emojis.db import Emoji
 
-from source.extra_qwidgets.utils import get_emoji_path
+from extra_qwidgets.utils import get_emoji_path
 
 
 class QEmojiButton(QPushButton):

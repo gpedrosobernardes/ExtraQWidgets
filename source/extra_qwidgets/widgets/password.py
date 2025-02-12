@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLineEdit
 
-from source.extra_qwidgets.widgets.color_responsive_button import QColorResponsiveButton
-from source.extra_qwidgets.utils import get_icon
+from extra_qwidgets.widgets.color_responsive_button import QColorResponsiveButton
+from extra_qwidgets.utils import get_icon
 
 
 class QPassword(QFrame):
