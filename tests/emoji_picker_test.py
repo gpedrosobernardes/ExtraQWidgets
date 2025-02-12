@@ -3,7 +3,7 @@ import sys
 from PySide6.QtWidgets import QMainWindow, QApplication, QLineEdit, QWidget, QVBoxLayout
 
 from source.extra_qwidgets.widgets.emoji_picker import QEmojiPicker
-from source.extra_qwidgets.utils import get_icon, colorize_icon_by_theme
+from source.extra_qwidgets.utils import get_awesome_icon, colorize_icon_by_theme
 
 
 class MainWindow(QMainWindow):
@@ -11,7 +11,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Emoji Picker Test")
-        self.setWindowIcon(colorize_icon_by_theme(get_icon("python-brands-solid.svg")))
+        self.setWindowIcon(colorize_icon_by_theme(get_awesome_icon("python", "brands")))
 
         widget = QWidget()
 

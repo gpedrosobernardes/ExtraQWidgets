@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLineEdit
 
 from extra_qwidgets.widgets.color_responsive_button import QColorResponsiveButton
-from extra_qwidgets.utils import get_icon
+from extra_qwidgets.utils import get_awesome_icon
 
 
 class QPassword(QFrame):
@@ -24,7 +24,7 @@ class QPassword(QFrame):
     def set_password_hide(self, hide: bool):
         if hide:
             self.line_edit.setEchoMode(QLineEdit.EchoMode.Password)
-            self.hide_button.setIcon(get_icon("eye-regular.svg"))
+            self.hide_button.setIcon(get_awesome_icon("eye"))
         else:
             self.line_edit.setEchoMode(QLineEdit.EchoMode.Normal)
-            self.hide_button.setIcon(get_icon("eye-slash-regular.svg"))
+            self.hide_button.setIcon(get_awesome_icon("eye-slash"))

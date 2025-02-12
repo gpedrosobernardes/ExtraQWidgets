@@ -11,7 +11,7 @@ from extra_qwidgets.widgets.color_responsive_button import QColorResponsiveButto
 from extra_qwidgets.widgets.emoji_picker.emoji_button import QEmojiButton
 from extra_qwidgets.widgets.emoji_picker.emoji_grid import QEmojiGrid
 from extra_qwidgets.exceptions import FavoriteNotImplemented, RecentNotImplemented, EmojiAlreadyExists
-from extra_qwidgets.utils import get_icon, get_emoji_path
+from extra_qwidgets.utils import get_awesome_icon, get_emoji_path
 
 translate = QCoreApplication.translate
 
@@ -74,53 +74,53 @@ class QEmojiPicker(QWidget):
         if self.__recent_category:
             self.add_category(
                 "Recent",
-                get_icon("clock-rotate-left-solid.svg"),
+                get_awesome_icon("clock-rotate-left"),
                 translate("QEmojiPicker", "Recent"),
             )
         if self.__favorite_category:
             self.add_category(
                 "Favorite",
-                get_icon("star-solid.svg"),
+                get_awesome_icon("star"),
                 translate("QEmojiPicker", "Favorite"),
             )
         self.add_category(
             "Smileys & Emotion",
-            get_icon("face-smile-solid.svg"),
+            get_awesome_icon("face-smile"),
             translate("QEmojiPicker", "Smileys & Emotion"),
         )
         self.add_category(
             "Animals & Nature",
-            get_icon("leaf-solid.svg"),
+            get_awesome_icon("leaf"),
             translate("QEmojiPicker", "Animals & Nature"),
         )
         self.add_category(
             "Food & Drink",
-            get_icon("bowl-food-solid.svg"),
+            get_awesome_icon("bowl-food"),
             translate("QEmojiPicker", "Food & Drink"),
         )
         self.add_category(
             "Activities",
-            get_icon("gamepad-solid.svg"),
+            get_awesome_icon("gamepad"),
             translate("QEmojiPicker", "Activities"),
         )
         self.add_category(
             "Travel & Places",
-            get_icon("bicycle-solid.svg"),
+            get_awesome_icon("bicycle"),
             translate("QEmojiPicker", "Travel & Places"),
         )
         self.add_category(
             "Objects",
-            get_icon("lightbulb-solid.svg"),
+            get_awesome_icon("lightbulb"),
             translate("QEmojiPicker", "Objects"),
         )
         self.add_category(
             "Symbols",
-            get_icon("heart-solid.svg"),
+            get_awesome_icon("heart"),
             translate("QEmojiPicker", "Symbols"),
         )
         self.add_category(
             "Flags",
-            get_icon("flag-solid.svg"),
+            get_awesome_icon("flag"),
             translate("QEmojiPicker", "Flags"),
         )
 

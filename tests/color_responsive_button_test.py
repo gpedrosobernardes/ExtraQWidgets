@@ -3,7 +3,7 @@ import sys
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout
 
 from source.extra_qwidgets.widgets import QColorResponsiveButton
-from source.extra_qwidgets.utils import colorize_icon_by_theme, get_icon
+from source.extra_qwidgets.utils import colorize_icon_by_theme, get_awesome_icon
 
 
 class MainWindow(QMainWindow):
@@ -11,14 +11,14 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Color Responsive Button Test")
-        self.setWindowIcon(colorize_icon_by_theme(get_icon("python-brands-solid.svg")))
+        self.setWindowIcon(colorize_icon_by_theme(get_awesome_icon("python", "brands")))
 
         widget = QWidget()
 
         layout = QVBoxLayout()
 
         button = QColorResponsiveButton()
-        button.setIcon(get_icon("face-smile-solid.svg"))
+        button.setIcon(get_awesome_icon("face-smile"))
 
         layout.addWidget(button)
 
