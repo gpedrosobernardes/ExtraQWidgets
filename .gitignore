@@ -1,3 +1,4 @@
 .venv
 .idea
 build
+source/extra_qwidgets.egg-info
