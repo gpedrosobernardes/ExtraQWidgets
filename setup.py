@@ -16,7 +16,9 @@ setup(
         "Operating System :: OS Independent",
     ],
     package_dir={"": "source"},
-    packages=["extra_qwidgets"],
+    package_data={"": ["assets/icons/*.svg", "assets/emojis/*.png"]},
+    include_package_data=True,
+    packages=["extra_qwidgets", "extra_qwidgets.widgets", "extra_qwidgets.widgets.emoji_picker"],
     install_requires=["emojis", "PySide6"],
     python_requires=">=3.12"
 )
