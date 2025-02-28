@@ -14,9 +14,9 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(colorize_icon_by_theme(get_awesome_icon("python", "brands")))
 
         widget = QCheckBoxGroup(QLabel("Select a color:"))
-        widget.add_checkbox("red", QCheckBox("Red"))
-        widget.add_checkbox("green", QCheckBox("Green"))
-        widget.add_checkbox("blue", QCheckBox("Blue"))
+        widget.add_checkbox(QCheckBox("Red"))
+        widget.add_checkbox(QCheckBox("Green"))
+        widget.add_checkbox(QCheckBox("Blue"))
 
         self.setCentralWidget(widget)
 
