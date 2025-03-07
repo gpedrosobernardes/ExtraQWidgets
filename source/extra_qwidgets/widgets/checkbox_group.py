@@ -1,29 +1,87 @@
 import typing
+from functools import partial
 
-from PySide6.QtWidgets import QGridLayout, QWidget, QLabel, QCheckBox, QButtonGroup, QAbstractButton
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QCheckBox
 
 
-class QCheckBoxGroup(QWidget):
-    def __init__(self, label: QLabel):
+class QCheckBoxGroup:
+    def __init__(self):
+        """
+        A group of checkboxes that only allows one checkbox to be checked at a time. Allows to uncheck all checkboxes.
+        """
         super().__init__()
-        self.__layout = QGridLayout()
-        self.__label = label
-        self.__button_group = QButtonGroup()
-        self.__button_group.setExclusive(True)
-        self.__layout.addWidget(self.__label, 0, 0)
-        self.setLayout(self.__layout)
+        self.__checkboxes: typing.List[QCheckBox] = []
+        self.__current: typing.Optional[QCheckBox] = None
 
     def add_checkbox(self, checkbox: QCheckBox):
-        checkboxes = len(self.checkboxes())
-        self.__layout.addWidget(checkbox, checkboxes, 1)
-        self.__button_group.addButton(checkbox)
+        """
+        Adds a checkbox to the group.
+        :param checkbox: QCheckBox
+        :return: None
+        """
+        on_check = partial(self.__on_check, checkbox)
+        checkbox.checkStateChanged.connect(on_check)
+        self.__checkboxes.append(checkbox)
 
-    def add_checkboxes(self, checkboxes: typing.Iterable[QCheckBox]):
+    def add_checkboxes(self, *checkboxes: QCheckBox):
+        """
+        Adds multiple checkboxes to the group.
+        :param checkboxes: typing.Tuple[QCheckBox]
+        :return: None
+        """
         for c in checkboxes:
             self.add_checkbox(c)
 
-    def get_checked(self) -> QAbstractButton:
-        return self.__button_group.checkedButton()
+    def remove_checkbox(self, checkbox: QCheckBox):
+        """
+        Removes a checkbox from the group.
+        :param checkbox: QCheckBox
+        :return: None
+        """
+        if checkbox in self.__checkboxes:
+            self.__checkboxes.remove(checkbox)
 
-    def checkboxes(self) -> list[QCheckBox]:
-        return [w for w in self.children() if isinstance(w, QCheckBox)]
+    def remove_checkboxes(self, *checkboxes: QCheckBox):
+        """
+        Removes multiple checkboxes from the group.
+        :param checkboxes: typing.Tuple[QCheckBox]
+        :return: None
+        """
+        for c in checkboxes:
+            self.remove_checkbox(c)
+
+    def __on_check(self, checkbox: QCheckBox, check_state: int):
+        """
+        Callback for when a checkbox is checked. Unchecks all other checkboxes.
+        :param checkbox: QCheckBox
+        :param check_state: Qt.CheckState
+        :return: None
+        """
+        if check_state == Qt.CheckState.Checked:
+            self.__current = checkbox
+            for c in self.__checkboxes:
+                c.setChecked(c == checkbox)
+        elif checkbox == self.__current:
+            self.__current = None
+
+    def get_checked(self) -> typing.Optional[QCheckBox]:
+        """
+        Returns the currently checked checkbox.
+        :return: typing.Optional[QCheckBox]
+        """
+        return self.__current
+
+    def get_checked_name(self) -> typing.Optional[str]:
+        """
+        Returns the object name of the currently checked checkbox.
+        :return: typing.Optional[str]
+        """
+        return self.__current.objectName() if self.__current is not None else None
+
+    def checkboxes(self) -> typing.List[QCheckBox]:
+        """
+        Returns all checkboxes in the group.
+        :return: typing.List[QCheckBox]
+        """
+        return self.__checkboxes

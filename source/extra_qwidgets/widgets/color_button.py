@@ -5,6 +5,12 @@ from extra_qwidgets.utils import adjust_brightness
 
 class QColorButton(QPushButton):
     def __init__(self, text: str, color: str, font_color: str = "white"):
+        """
+        A button with a color background.
+        :param text: str
+        :param color: str
+        :param font_color: str
+        """
         super().__init__()
         self.setText(text)
         hover_color = adjust_brightness(color, 15)

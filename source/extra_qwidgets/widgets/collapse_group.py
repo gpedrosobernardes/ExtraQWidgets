@@ -5,6 +5,11 @@ from extra_qwidgets.utils import get_awesome_icon
 
 class QCollapseGroup(QWidget):
     def __init__(self, title: str, widget: QWidget):
+        """
+        A collapsible group widget.
+        :param title: str
+        :param widget: QWidget
+        """
         super().__init__()
         self.__collapsed = False
         self.__widget = widget
@@ -28,6 +33,11 @@ class QCollapseGroup(QWidget):
         self.setLayout(self.__layout)
 
     def set_collapse(self, collapse: bool):
+        """
+        Sets if the widget is collapsed.
+        :param collapse: bool
+        :return: None
+        """
         if collapse:
             self.__widget.hide()
             self.__collapse_button.setIcon(get_awesome_icon("angle-right"))
@@ -37,7 +47,15 @@ class QCollapseGroup(QWidget):
         self.__collapsed = collapse
 
     def widget(self):
+        """
+        Returns the widget.
+        :return: QWidget
+        """
         return self.__widget
 
     def header(self) -> QLabel:
+        """
+        Returns the header label.
+        :return: QLabel
+        """
         return self.__label

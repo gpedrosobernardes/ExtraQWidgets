@@ -4,8 +4,13 @@ from extra_qwidgets.utils import is_dark_mode, colorize_icon
 
 
 class QThemeResponsiveButton(QPushButton):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args, **kwargs):
+        """
+        A QPushButton that changes its icon color based on the current theme.
+        :param args: QPushButton's arguments
+        :param kwargs: QPushButton's keyword arguments
+        """
+        super().__init__(*args, **kwargs)
         self.installEventFilter(self)
 
     def eventFilter(self, obj, event):

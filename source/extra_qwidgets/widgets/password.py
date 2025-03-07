@@ -6,6 +6,9 @@ from extra_qwidgets.utils import get_awesome_icon
 
 class QPassword(QFrame):
     def __init__(self):
+        """
+        A password input widget with a hide button.
+        """
         super().__init__()
         layout = QHBoxLayout(self)
         self.line_edit = QLineEdit()
@@ -19,9 +22,18 @@ class QPassword(QFrame):
         self.set_password_hide(True)
 
     def is_password_hide(self) -> bool:
+        """
+        Returns if the password is hidden.
+        :return: bool
+        """
         return self.line_edit.echoMode() == QLineEdit.EchoMode.Password
 
     def set_password_hide(self, hide: bool):
+        """
+        Sets if the password is hidden.
+        :param hide: bool
+        :return: None
+        """
         if hide:
             self.line_edit.setEchoMode(QLineEdit.EchoMode.Password)
             self.hide_button.setIcon(get_awesome_icon("eye"))

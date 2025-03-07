@@ -6,12 +6,21 @@ from PySide6.QtWidgets import QTextEdit
 
 class QResponsiveTextEdit(QTextEdit):
     def __init__(self, *args, **kwargs):
+        """
+        A QTextEdit widget that adjusts its height to fit the text.
+        :param args: QTextEdit's arguments
+        :param kwargs: QTextEdit's keyword arguments
+        """
         super().__init__(*args, **kwargs)
         self.__maximum_height = None
         self.__adjust_height()
         self.textChanged.connect(self.__adjust_height)
 
     def __adjust_height(self):
+        """
+        Adjusts the height of the widget to fit the text.
+        :return: None
+        """
         height = (
             int(self.document().size().height())
             + self.contentsMargins().top()
