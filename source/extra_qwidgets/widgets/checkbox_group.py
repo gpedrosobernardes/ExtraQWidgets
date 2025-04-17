@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QCheckBox
 class QCheckBoxGroup:
     def __init__(self):
         """
-        A group of checkboxes that only allows one checkbox to be checked at a time. Allows to uncheck all checkboxes.
+        A group of checkboxes that only allows one checkbox to be checked at a time. Allows unchecking all checkboxes.
         """
         super().__init__()
         self.__checkboxes: typing.List[QCheckBox] = []
@@ -85,3 +85,23 @@ class QCheckBoxGroup:
         :return: typing.List[QCheckBox]
         """
         return self.__checkboxes
+
+    def reset(self):
+        """
+        Resets the checkboxes.
+        :return: None
+        """
+        for c in self.__checkboxes:
+            c.setChecked(False)
+
+    def check_by_name(self, name: str) -> typing.Optional[QCheckBox]:
+        """
+        Checks the checkbox with the given name. Returns the object of the checkbox if found.
+        :param name: str
+        :return: typing.Optional[QCheckBox]
+        """
+        for c in self.__checkboxes:
+            if c.objectName() == name:
+                c.setChecked(True)
+                return c
+        return None
