@@ -51,13 +51,13 @@ class ABCPager(QWidget, metaclass=QtABCMeta):
         for i in range(self._get_real_visible_button_count()):
             self._add_button(i + 1)
 
-
     def _update_buttons_text(self):
-        if self._current_page + self._visible_button_count - 1 <= self._page_count:
+        real_visible_button_count = self._get_real_visible_button_count()
+        if self._current_page + real_visible_button_count - 1 <= self._page_count:
             first_button_page = self._current_page
         else:
-            first_button_page = self._page_count - self._visible_button_count + 1
-        for i in range(self._get_real_visible_button_count()):
+            first_button_page = self._page_count - real_visible_button_count + 1
+        for i in range(real_visible_button_count):
             page = first_button_page + i
             btn = self._buttons[i]
             btn.setChecked(page == self._current_page)
@@ -107,6 +107,7 @@ class ABCPager(QWidget, metaclass=QtABCMeta):
             page = 1
         self._current_page = page
         self._update_buttons_text()
+        self.currentPageChanged.emit(page)
 
     def getVisibleButtonCount(self) -> int:
         return self._visible_button_count

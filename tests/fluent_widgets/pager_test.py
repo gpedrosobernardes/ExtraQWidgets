@@ -20,6 +20,7 @@ class MainWindow(QMainWindow):
         pager.setPageCount(100)
         pager.setVisibleButtonCount(9)
         pager.setShortcutButtonsVisible(False)
+        pager.currentPageChanged.connect(lambda page: print(f"Current page: {page}"))
 
         self.setCentralWidget(pager)
 
