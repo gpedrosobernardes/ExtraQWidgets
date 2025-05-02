@@ -101,7 +101,9 @@ class ABCPager(QWidget, metaclass=QtABCMeta):
         return self._current_page
 
     def setCurrentPage(self, page: int):
-        if page >= self._page_count:
+        if page == self._current_page:
+            return
+        elif page >= self._page_count:
             page = self._page_count
         elif page <= 1:
             page = 1
