@@ -71,13 +71,13 @@ class ABCPager(QWidget, metaclass=QtABCMeta):
         buttons = len(self._buttons)
         if buttons > max_buttons:
             for i in range(buttons - max_buttons):
-                self._remove_button(i)
+                self._remove_first_button()
         elif buttons < max_buttons:
             for i in range(buttons, max_buttons):
                 self._add_button(self._current_page + i + 1)
 
-    def _remove_button(self, index: int):
-        btn = self._buttons.pop(index)
+    def _remove_first_button(self):
+        btn = self._buttons.pop(0)
         self._layout.removeWidget(btn)
         btn.deleteLater()
 
