@@ -1,10 +1,9 @@
 import qtawesome
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QListWidget, QAbstractButton
-from qfluentwidgets import ListWidget, PushButton, TransparentToolButton
+from qfluentwidgets import ListWidget, TransparentToolButton
 
 from extra_qwidgets.abc_widgets.abc_single_selection_list import ABCSingleSelectionList
-
 
 
 class SingleSelectionList(ABCSingleSelectionList):

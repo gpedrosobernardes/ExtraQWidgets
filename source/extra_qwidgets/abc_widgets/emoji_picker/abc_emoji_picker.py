@@ -39,7 +39,6 @@ class ABCEmojiPicker(QWidget):
         self.__menu_horizontal_layout = QHBoxLayout()
         self.__scroll_area = QScrollArea()
         self.__scroll_area.setWidgetResizable(True)
-        #self.__scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.__scroll_area.setWidget(self._collapse_group)
         self.__emoji_layout = QHBoxLayout()
         self.__emoji_layout.addWidget(self.__emoji_label)
@@ -52,8 +51,8 @@ class ABCEmojiPicker(QWidget):
         self.setLayout(self.__vertical_layout)
         self.__add_categories()
         self.__load_emojis()
-        # self.__hide_empty_categories()
-        # self.__bind_signals()
+        self.__hide_empty_categories()
+        self.__bind_signals()
 
     def __bind_signals(self):
         self.__line_edit.textEdited.connect(lambda: self.__filter_emojis(self.__line_edit.text()))
@@ -125,7 +124,6 @@ class ABCEmojiPicker(QWidget):
         for category in self.__categories.keys():
             if category not in ("Favorite", "Recent"):
                 self.__add_emojis(category, get_emojis_by_category(category))
-                self.emojiGrid(category)._adjust_fixed_height()
         self.__add_emojis("Smileys & Emotion", get_emojis_by_category("People & Body"))
 
     def add_category(self, category: str, icon: QIcon, title: str):
@@ -134,6 +132,7 @@ class ABCEmojiPicker(QWidget):
         shortcut_button.clicked.connect(lambda: self.__on_shortcut_click(category))
         self.__menu_horizontal_layout.addWidget(shortcut_button)
         emoji_grid = QEmojiGrid()
+        self.__bind_emoji_grid(emoji_grid)
         self._collapse_group.addCollapse(title, emoji_grid, name=category, stretch=True)
         self.__categories[category] = {
             "shortcut": shortcut_button,
@@ -146,7 +145,7 @@ class ABCEmojiPicker(QWidget):
 
     def __scroll_to_category(self, category: str):
         self.__scroll_area.verticalScrollBar().setValue(
-            self.emojiGrid(category).y()
+            self._collapse_group.getItemByName(category).header().pos().y()
         )
 
     def __on_shortcut_click(self, category: str):
@@ -168,7 +167,6 @@ class ABCEmojiPicker(QWidget):
         item = QStandardItem()
         item.setData(emoji, Qt.ItemDataRole.UserRole)
         item.setIcon(QIcon(get_emoji_path(emoji)))
-        self.__bind_emoji_item(item, emoji)
         emoji_grid.addItem(item)
         return item
 
@@ -188,25 +186,23 @@ class ABCEmojiPicker(QWidget):
     def _new_collapse_group(self) -> ABCCollapseGroup:
         pass
 
+    @abstractmethod
+    def _new_menu(self) -> QMenu:
+        pass
+
     def __remove_emoji(self, category: str, emoji: Emoji):
         emoji_grid = self.emojiGrid(category)
         emoji_grid.removeEmoji(emoji)
 
-    def __bind_emoji_item(self, emoji_item: QStandardItem, emoji: Emoji):
-        emoji_item.enterEvent = lambda event: self.__set_emoji_label(emoji)
-        emoji_item.leaveEvent = lambda event: self.__mouse_leave_emoji()
-        # if self.__favorite_category:
-        #     emoji_item.setContextMenuPolicy(
-        #         Qt.ContextMenuPolicy.CustomContextMenu
-        #     )
-        #     emoji_item.customContextMenuRequested.connect(
-        #         lambda position: self.__open_button_context_menu(position, emoji_item)
-        #     )
-        # emoji_item.clicked.connect(lambda: self.picked.emit(emoji))
-        # if self.__recent_category:
-        #     emoji_item.clicked.connect(lambda: self.__add_recent(emoji))
-        #     emoji_item.clicked.connect(lambda: self.__filter_emojis(self.__line_edit.text()))
-        #     emoji_item.clicked.connect(lambda: QTimer.singleShot(5, self.__hide_empty_categories))
+    def __bind_emoji_grid(self, emoji_grid: QEmojiGrid):
+        emoji_grid.mouseLeftEmoji.connect(self.__mouse_leave_emoji)
+        emoji_grid.mouseEnteredEmoji.connect(self.__set_emoji_label)
+        emoji_grid.emojiClicked.connect(self.picked.emit)
+        emoji_grid.contextMenu.connect(self.__open_button_context_menu)
+        if self.__recent_category:
+            emoji_grid.emojiClicked.connect(self.__add_recent)
+            emoji_grid.emojiClicked.connect(lambda: self.__filter_emojis(self.__line_edit.text()))
+            emoji_grid.emojiClicked.connect(lambda: QTimer.singleShot(5, self.__hide_empty_categories))
 
     def addRecent(self, emoji: Emoji):
         if not self.__recent_category:
@@ -273,7 +269,7 @@ class ABCEmojiPicker(QWidget):
     def __hide_empty_categories(self):
         for category in self.__categories.keys():
             emoji_grid = self.emojiGrid(category)
-            is_empty = emoji_grid.isEmpty()
+            is_empty = emoji_grid.allFiltered()
             self._collapse_group.setCollapsedByName(is_empty, category)
             shortcut = self.shortcut(category)
             shortcut.setHidden(is_empty)
@@ -292,9 +288,8 @@ class ABCEmojiPicker(QWidget):
         self.__filter_emojis()
         self.__scroll_area.verticalScrollBar().setValue(0)
 
-    def __open_button_context_menu(self, position: QPoint, button: QAbstractButton):
-        context_menu = QMenu()
-        emoji = button.property("emoji")
+    def __open_button_context_menu(self, emoji: Emoji, global_position: QPoint):
+        context_menu = self._new_menu()
         if self.isFavorite(emoji):
             remove_action = QAction(
                 translate("QEmojiPicker", "Remove from favorite")
@@ -305,4 +300,4 @@ class ABCEmojiPicker(QWidget):
             add_action = QAction(translate("QEmojiPicker", "Add to favorite"))
             add_action.triggered.connect(lambda: self.favorite.emit(emoji))
             context_menu.addAction(add_action)
-        context_menu.exec(button.mapToGlobal(position))
+        context_menu.exec(global_position)

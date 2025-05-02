@@ -10,4 +10,4 @@ class EmojiSortFilterProxyModel(QSortFilterProxyModel):
         pattern = self.filterRegularExpression().pattern()
         if not pattern:
             return True
-        return pattern.lower() in obj.aliases
+        return any(pattern.lower() in alias for alias in obj.aliases)

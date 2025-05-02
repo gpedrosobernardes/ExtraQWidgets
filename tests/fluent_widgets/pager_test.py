@@ -2,9 +2,10 @@ import sys
 
 import qtawesome
 from PySide6.QtWidgets import QApplication, QMainWindow
+from qfluentwidgets import setTheme, Theme
 
 from extra_qwidgets.fluent_widgets.pager import Pager
-from extra_qwidgets.proxys import colorize_icon_by_theme
+from extra_qwidgets.utils import colorize_icon_by_theme
 
 
 class MainWindow(QMainWindow):

@@ -1,20 +1,25 @@
 import typing
 
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QStandardItemModel, QStandardItem
-from PySide6.QtWidgets import QListView, QTreeView, QSizePolicy, QAbstractScrollArea
+from PySide6.QtCore import QSize, Qt, Signal, QModelIndex, QPoint
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QMouseEvent
+from PySide6.QtWidgets import QListView, QSizePolicy, QAbstractScrollArea
 from emojis.db import Emoji
 
 from extra_qwidgets.abc_widgets.emoji_picker.emoji_sort_filter_proxy_model import EmojiSortFilterProxyModel
 
 
 class QEmojiGrid(QListView):
+    mouseEnteredEmoji = Signal(Emoji)
+    mouseLeftEmoji = Signal()
+    emojiClicked = Signal(Emoji)
+    contextMenu = Signal(Emoji, QPoint)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = QStandardItemModel()
-        # self.proxy = EmojiSortFilterProxyModel(self)
-        # self.proxy.setSourceModel(self.model)
-        self.setModel(self.model)
+        self._proxy = EmojiSortFilterProxyModel(self)
+        self._proxy.setSourceModel(self.model)
+        self.setModel(self._proxy)
         self.setViewMode(QListView.ViewMode.IconMode)
         self.setResizeMode(QListView.ResizeMode.Adjust)
         self.setUniformItemSizes(True)
@@ -25,13 +30,39 @@ class QEmojiGrid(QListView):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self._setup_binds()
+
+    def _setup_binds(self):
+        self.setMouseTracking(True)
+        self.mouseMoveEvent = lambda event: self._on_mouse_enter_emoji_grid(event)
+        self.clicked.connect(self.__on_clicked)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._on_context_menu)
+
+    def __on_clicked(self, index: QModelIndex):
+        item_data = self.proxy().itemData(index)[Qt.ItemDataRole.UserRole]
+        self.emojiClicked.emit(item_data)
+
+    def _on_mouse_enter_emoji_grid(self, event: QMouseEvent):
+        index = self.indexAt(event.pos())
+        if index.isValid():
+            item_data = self.proxy().itemData(index)[Qt.ItemDataRole.UserRole]
+            self.mouseEnteredEmoji.emit(item_data)
+        else:
+            self.mouseLeftEmoji.emit()
+
+    def _on_context_menu(self, pos: QPoint):
+        index = self.indexAt(pos)
+        if index.isValid():
+            item_data = self.proxy().itemData(index)[Qt.ItemDataRole.UserRole]
+            self.contextMenu.emit(item_data, self.mapToGlobal(pos))
 
     def resizeEvent(self, e):
         super().resizeEvent(e)
         self._adjust_fixed_height()
 
     def _adjust_fixed_height(self):
-        itens_total = self.model.rowCount()
+        itens_total = self._proxy.rowCount()
         if itens_total == 0:
             return
         item_size = self.gridSize()
@@ -40,7 +71,7 @@ class QEmojiGrid(QListView):
             return
         items_per_row = max(1, width // item_size.width())
         rows = -(-itens_total // items_per_row)
-        total_height = rows * item_size.height()
+        total_height = rows * item_size.height() + 5
         self.setFixedHeight(total_height)
 
     def addItem(self, item: QStandardItem):
@@ -54,16 +85,19 @@ class QEmojiGrid(QListView):
     def getItem(self, emoji: Emoji) -> typing.Optional[QStandardItem]:
         for i in range(self.model.rowCount()):
             item = self.model.item(i)
-            if item.data() == emoji:
+            if item.data(Qt.ItemDataRole.UserRole) == emoji:
                 return item
         return None
 
-    def allHidden(self) -> bool:
-        return self.proxy.rowCount() == 0
+    def allFiltered(self) -> bool:
+        return self._proxy.rowCount() == 0
 
     def isEmpty(self) -> bool:
         return self.model.rowCount() == 0
 
     def filter(self, text: str):
-        self.proxy.setFilterFixedString(text)
-        self.updateGeometry()
+        self._proxy.setFilterFixedString(text)
+        self._adjust_fixed_height()
+
+    def proxy(self) -> EmojiSortFilterProxyModel:
+        return self._proxy

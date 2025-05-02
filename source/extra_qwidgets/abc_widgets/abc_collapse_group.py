@@ -35,27 +35,37 @@ class ABCCollapseGroup(QWidget, metaclass=QtABCMeta):
 
     def expandAll(self):
         for item in self._collapse_items:
-            item.setCollapsed(False)
+            item.setCollapse(False)
 
     def collapseAll(self):
         for item in self._collapse_items:
-            item.setCollapsed(True)
+            item.setCollapse(True)
 
     def setCollapsedByTitle(self, collapse: bool, title: str):
-        for item in self._collapse_items:
-            if item.header().text() == title:
-                item.setCollapsed(collapse)
-                break
+        item = self.getItemByTitle(title)
+        if item:
+            item.setCollapse(collapse)
 
     def setCollapsedByName(self, collapse: bool, name: str):
+        item = self.getItemByName(name)
+        if item:
+            item.setCollapse(collapse)
+
+    def getItemByTitle(self, title: str) -> typing.Optional[ABCCollapseItem]:
+        for item in self._collapse_items:
+            if item.header().text() == title:
+                return item
+        return None
+
+    def getItemByName(self, name: str) -> typing.Optional[ABCCollapseItem]:
         for item in self._collapse_items:
             if item.objectName() == name:
-                item.setCollapsed(collapse)
-                break
+                return item
+        return None
 
     def toggleAll(self):
         for item in self._collapse_items:
-            item.setCollapsed(not item.isCollapsed())
+            item.setCollapse(not item.isCollapsed())
 
     def isAllCollapsed(self) -> bool:
         return all(item.isCollapsed() for item in self._collapse_items)

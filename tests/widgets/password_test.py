@@ -4,7 +4,7 @@ import qtawesome
 from PySide6.QtWidgets import QMainWindow, QApplication
 
 from source.extra_qwidgets.widgets import QPassword
-from source.extra_qwidgets.proxys import colorize_icon_by_theme
+from source.extra_qwidgets.utils import colorize_icon_by_theme
 
 
 class MainWindow(QMainWindow):

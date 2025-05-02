@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QMainWindow, QApplication
 from qfluentwidgets import Theme, setTheme
 
 from extra_qwidgets.fluent_widgets.single_selection_list import SingleSelectionList
-from source.extra_qwidgets.proxys import colorize_icon_by_theme
+from source.extra_qwidgets.utils import colorize_icon_by_theme
 
 
 class MainWindow(QMainWindow):

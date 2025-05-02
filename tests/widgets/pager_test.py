@@ -3,7 +3,7 @@ import sys
 import qtawesome
 from PySide6.QtWidgets import QApplication, QMainWindow
 
-from extra_qwidgets.proxys import colorize_icon_by_theme
+from extra_qwidgets.utils import colorize_icon_by_theme
 from extra_qwidgets.widgets.pager import QPager
 
 

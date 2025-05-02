@@ -1,6 +1,6 @@
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QPushButton, QAbstractButton, QLineEdit, QLabel
+from PySide6.QtWidgets import QPushButton, QAbstractButton, QLineEdit, QLabel, QMenu
 
 from extra_qwidgets.abc_widgets.abc_collapse_group import ABCCollapseGroup
 from extra_qwidgets.abc_widgets.emoji_picker.abc_emoji_picker import ABCEmojiPicker
@@ -32,3 +32,6 @@ class QEmojiPicker(ABCEmojiPicker):
 
     def _new_collapse_group(self) -> ABCCollapseGroup:
         return QCollapseGroup()
+
+    def _new_menu(self) -> QMenu:
+        return QMenu()

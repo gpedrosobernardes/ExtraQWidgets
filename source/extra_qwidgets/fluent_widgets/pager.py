@@ -1,6 +1,6 @@
 import qtawesome
 from PySide6.QtCore import QSize
-from qfluentwidgets import PushButton, ToolButton, ToggleButton
+from qfluentwidgets import ToolButton, ToggleButton
 
 from extra_qwidgets.abc_widgets.abc_pager import ABCPager
 
