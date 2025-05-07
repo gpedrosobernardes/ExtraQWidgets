@@ -1,8 +1,9 @@
 import typing
 from abc import abstractmethod
 
-import qtawesome
+import qtawesome as qta
 from PySide6.QtCore import QObject
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout, QAbstractButton
 
 from extra_qwidgets.abc_widgets.abc_meta import QtABCMeta
@@ -19,18 +20,22 @@ class ABCCollapseItem(QObject, metaclass=QtABCMeta):
         if name:
             self.setObjectName(name)
         self.__collapsed = collapsed
+        self._child = child
         self.__collapse_button = self._new_collapse_button()
-        self.__collapse_button.setIcon(qtawesome.icon("fa6s.angle-down"))
-        self.__collapse_button.clicked.connect(
-            lambda: self.setCollapse(not self.__collapsed)
-        )
+        down_icon = qta.icon('fa6s.angle-down').pixmap(24, 24)
+        up_icon = qta.icon('fa6s.angle-up').pixmap(24, 24)
+        icon = QIcon()
+        icon.addPixmap(up_icon, QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addPixmap(down_icon, QIcon.Mode.Normal, QIcon.State.On)
+        self.__collapse_button.setIcon(icon)
+        self.__collapse_button.setCheckable(True)
+        self.__collapse_button.toggled.connect(lambda checked: self._child.setVisible(checked))
+        self.__collapse_button.setChecked(not collapsed)
         self.__label = QLabel(title)
         self.__header_layout = QHBoxLayout()
         self.__header_layout.addWidget(self.__collapse_button)
         self.__header_layout.addWidget(self.__label, 1)
         self.__header_layout.setSpacing(10)
-        self._child = child
-        self._set_collapsed(collapsed)
 
     def setCollapse(self, collapse: bool):
         """
@@ -38,19 +43,10 @@ class ABCCollapseItem(QObject, metaclass=QtABCMeta):
         :param collapse: bool
         :return: None
         """
-        self.__collapsed = collapse
-        self._set_collapsed(collapse)
-
-    def _set_collapsed(self, collapse: bool):
-        if collapse:
-            self._child.hide()
-            self.__collapse_button.setIcon(qtawesome.icon("fa6s.angle-up"))
-        else:
-            self._child.show()
-            self.__collapse_button.setIcon(qtawesome.icon("fa6s.angle-down"))
+        self.__collapse_button.setChecked(not collapse)
 
     def isCollapsed(self) -> bool:
-        return self.__collapsed
+        return self.__collapse_button.isChecked()
 
     @abstractmethod
     def _new_collapse_button(self) -> QAbstractButton:
