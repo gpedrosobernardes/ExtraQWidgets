@@ -103,10 +103,10 @@ class ABCPager(QWidget, metaclass=QtABCMeta):
     def setCurrentPage(self, page: int):
         if page == self._current_page:
             return
-        elif page >= self._page_count:
-            page = self._page_count
-        elif page <= 1:
+        elif page < 1:
             page = 1
+        elif page > self._page_count:
+            page = self._page_count
         self._current_page = page
         self._update_buttons_text()
         self.currentPageChanged.emit(page)
@@ -124,10 +124,11 @@ class ABCPager(QWidget, metaclass=QtABCMeta):
 
     def setPageCount(self, page_count: int):
         self._page_count = page_count
-        if self._current_page > page_count:
-            self._current_page = page_count
         self._update_visible_buttons()
-        self._update_buttons_text()
+        if self._current_page > page_count > 0:
+            self.setCurrentPage(page_count)
+        else:
+            self._update_buttons_text()
 
     @abstractmethod
     def _new_page_button(self) -> QAbstractButton:
