@@ -8,10 +8,10 @@ from PySide6.QtGui import QIcon, QPixmap, QAction, QStandardItem
 from PySide6.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QLabel, QVBoxLayout, \
     QScrollArea, QMenu, QAbstractButton
 from emojis.db import Emoji, get_emojis_by_category
+from twemoji_api.api import get_emoji_path
 
 from extra_qwidgets.abc_widgets.abc_collapse_group import ABCCollapseGroup
 from extra_qwidgets.exceptions import FavoriteNotImplemented, RecentNotImplemented, EmojiAlreadyExists
-from extra_qwidgets.utils import get_emoji_path
 from extra_qwidgets.widgets.emoji_picker.emoji_grid import QEmojiGrid
 
 translate = QCoreApplication.translate
@@ -166,7 +166,7 @@ class ABCEmojiPicker(QWidget):
         emoji_grid = self.emojiGrid(category)
         item = QStandardItem()
         item.setData(emoji, Qt.ItemDataRole.UserRole)
-        item.setIcon(QIcon(get_emoji_path(emoji)))
+        item.setIcon(QIcon(str(get_emoji_path(emoji))))
         emoji_grid.addItem(item)
         return item
 

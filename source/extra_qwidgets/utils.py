@@ -1,10 +1,8 @@
 import typing
-from pathlib import Path
 
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QIcon, QPainter, QPixmap, QColor, Qt
+from PySide6.QtGui import QIcon, QPainter, QPixmap, QColor, Qt, QImage
 from PySide6.QtWidgets import QApplication
-from emojis.db import Emoji
 
 
 def adjust_brightness(hex_color: str, percentage: float = 10) -> str:
@@ -85,43 +83,27 @@ def colorize_icon_by_theme(icon: QIcon, size: QSize = QSize(64, 64)) -> QIcon:
     return colorize_icon(icon, color, size)
 
 
-def get_emoji_path(emoji: Emoji) -> str:
-    file_name = emoji_to_code_point(emoji)
-    path = Path(__file__).parent.absolute() / f"assets/emojis/{file_name}.png"
-    if path.exists():
-        return str(path)
-    else:
-        file_name = "-".join(file_name.split("-")[:-1])
-        path = Path(__file__).parent.absolute() / f"assets/emojis/{file_name}.png"
-        return str(path)
+def scale_inside(image: QImage, factor: float) -> QImage:
+    # tamanho final (igual ao original)
+    w, h = image.width(), image.height()
 
+    # cria imagem com o mesmo tamanho, mas transparente
+    out = QImage(w, h, QImage.Format.Format_ARGB32)
 
-def emoji_to_code_point(emoji: Emoji):
-    delimiter = "-"
-    # Convert the string into a list of UTF-16 code units
-    code_units = [ord(char) for char in emoji.emoji]
+    out.fill(Qt.GlobalColor.transparent)
 
-    # Process the code units in pairs (high surrogate + low surrogate)
-    code_points = []
-    i = 0
-    while i < len(code_units):
-        high_surrogate = code_units[i]
-        low_surrogate = code_units[i + 1] if i + 1 < len(code_units) else None
+    # calcula tamanho reduzido
+    new_w = int(w * factor)
+    new_h = int(h * factor)
 
-        # Check if the current pair is a valid surrogate pair
-        if 0xD800 <= high_surrogate <= 0xDBFF and 0xDC00 <= low_surrogate <= 0xDFFF:
-            # Calculate the code point
-            code_point = (
-                    ((high_surrogate - 0xD800) << 10)
-                    + (low_surrogate - 0xDC00)
-                    + 0x10000
-            )
-            code_points.append(hex(code_point)[2:])  # Remove the '0x' prefix
-            i += 2  # Move to the next pair
-        else:
-            # If not a surrogate pair, treat it as a regular code point
-            code_points.append(hex(high_surrogate)[2:])
-            i += 1
+    # calcula posição para centralizar
+    x = (w - new_w) // 2
+    y = (h - new_h) // 2
 
-    # Join the code points with the specified delimiter
-    return delimiter.join(code_points)
+    # desenha imagem menor dentro da maior
+    p = QPainter(out)
+    p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+    p.drawImage(x, y, image.scaled(new_w, new_h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+    p.end()
+
+    return out
