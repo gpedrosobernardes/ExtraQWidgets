@@ -5,13 +5,13 @@ import qtawesome
 from PySide6.QtCore import QCoreApplication, Signal, QSize, QTimer, QPoint, Qt
 from PySide6.QtGui import QIcon, QAction, QStandardItem
 from PySide6.QtWidgets import QLineEdit, QHBoxLayout, QLabel, QVBoxLayout, \
-    QScrollArea, QMenu, QAbstractButton, QWidget
+    QMenu, QAbstractButton, QWidget, QApplication
 from emojis.db import Emoji, get_emojis_by_category
 from twemoji_api.api import get_emoji_path
 
-from extra_qwidgets.abstract.collapse_group import AbstractCollapseGroup
 from extra_qwidgets.abstract.metaclass import QtABCMeta
 from extra_qwidgets.exceptions import FavoriteNotImplemented, RecentNotImplemented, EmojiAlreadyExists
+from extra_qwidgets.widgets.accordion import QAccordion
 from extra_qwidgets.widgets.emoji_picker.emoji_grid import QEmojiGrid
 
 translate = QCoreApplication.translate
@@ -35,18 +35,15 @@ class AbstractEmojiPicker(QWidget, ABC, metaclass=QtABCMeta):
         self.__emoji_label.setFixedSize(QSize(32, 32))
         self.__emoji_label.setScaledContents(True)
         self.__aliases_emoji_label = self._new_emoji_label()
-        self._collapse_group = self._new_collapse_group()
+        self._accordion = QAccordion()
         self.__menu_horizontal_layout = QHBoxLayout()
-        self.__scroll_area = QScrollArea()
-        self.__scroll_area.setWidgetResizable(True)
-        self.__scroll_area.setWidget(self._collapse_group)
         self.__emoji_layout = QHBoxLayout()
         self.__emoji_layout.addWidget(self.__emoji_label)
         self.__emoji_layout.addWidget(self.__aliases_emoji_label, True)
         self.__vertical_layout = QVBoxLayout()
         self.__vertical_layout.addLayout(self.__menu_horizontal_layout)
         self.__vertical_layout.addWidget(self.__line_edit)
-        self.__vertical_layout.addWidget(self.__scroll_area)
+        self.__vertical_layout.addWidget(self._accordion)
         self.__vertical_layout.addLayout(self.__emoji_layout)
         self.setLayout(self.__vertical_layout)
         self.__add_categories()
@@ -56,15 +53,15 @@ class AbstractEmojiPicker(QWidget, ABC, metaclass=QtABCMeta):
 
     def __bind_signals(self):
         self.__line_edit.textEdited.connect(lambda: self.__filter_emojis(self.__line_edit.text()))
-        self.__line_edit.textEdited.connect(lambda: QTimer.singleShot(5, self.__hide_empty_categories))
+        self.__line_edit.textEdited.connect(lambda: self.__hide_empty_categories)
 
         if self.__favorite_category:
             self.favorite.connect(self.__add_favorite)
             self.favorite.connect(lambda: self.__filter_emojis(self.__line_edit.text()))
-            self.favorite.connect(lambda: QTimer.singleShot(5, self.__hide_empty_categories))
+            self.favorite.connect(lambda: self.__hide_empty_categories)
             self.removed_favorite.connect(lambda emoji, _: self.removeFavorite(emoji))
             self.removed_favorite.connect(lambda: self.__filter_emojis(self.__line_edit.text()))
-            self.removed_favorite.connect(lambda: QTimer.singleShot(5, self.__hide_empty_categories))
+            self.removed_favorite.connect(lambda: self.__hide_empty_categories)
 
     def __add_categories(self):
         if self.__recent_category:
@@ -133,24 +130,26 @@ class AbstractEmojiPicker(QWidget, ABC, metaclass=QtABCMeta):
         self.__menu_horizontal_layout.addWidget(shortcut_button)
         emoji_grid = QEmojiGrid()
         self.__bind_emoji_grid(emoji_grid)
-        self._collapse_group.addCollapse(title, emoji_grid, name=category, stretch=True)
+        accordion_item = self._accordion.addSection(title, emoji_grid)
         self.__categories[category] = {
             "shortcut": shortcut_button,
+            "accordion_item": accordion_item,
             "grid": emoji_grid
         }
 
     def __collapse_all_but(self, category: str):
-        self._collapse_group.collapseAll()
-        self._collapse_group.setCollapsedByName(False, category)
+        self._accordion.collapseAll()
+        accordion_item = self.__categories[category]["accordion_item"]
+        accordion_item.setExpanded(True)
 
     def __scroll_to_category(self, category: str):
-        self.__scroll_area.verticalScrollBar().setValue(
-            self._collapse_group.getItemByName(category).header().pos().y()
-        )
+        accordion_item = self.__categories[category]["accordion_item"]
+        self._accordion.scrollToHeader(accordion_item)
 
     def __on_shortcut_click(self, category: str):
         self.__collapse_all_but(category)
-        QTimer.singleShot(5, lambda: self.__scroll_to_category(category))
+        QApplication.processEvents()
+        self.__scroll_to_category(category)
 
     def emojiGrid(self, category: str) -> QEmojiGrid:
         return self.__categories[category]["grid"]
@@ -186,10 +185,6 @@ class AbstractEmojiPicker(QWidget, ABC, metaclass=QtABCMeta):
         pass
 
     @abstractmethod
-    def _new_collapse_group(self) -> AbstractCollapseGroup:
-        pass
-
-    @abstractmethod
     def _new_menu(self) -> QMenu:
         pass
 
@@ -205,7 +200,7 @@ class AbstractEmojiPicker(QWidget, ABC, metaclass=QtABCMeta):
         if self.__recent_category:
             emoji_grid.emojiClicked.connect(self.__add_recent)
             emoji_grid.emojiClicked.connect(lambda: self.__filter_emojis(self.__line_edit.text()))
-            emoji_grid.emojiClicked.connect(lambda: QTimer.singleShot(5, self.__hide_empty_categories))
+            emoji_grid.emojiClicked.connect(lambda: self.__hide_empty_categories)
 
     def addRecent(self, emoji: Emoji):
         if not self.__recent_category:
@@ -277,7 +272,8 @@ class AbstractEmojiPicker(QWidget, ABC, metaclass=QtABCMeta):
         for category in self.__categories.keys():
             emoji_grid = self.emojiGrid(category)
             is_empty = emoji_grid.allFiltered()
-            self._collapse_group.setCollapsedByName(is_empty, category)
+            accordion_item = self.__categories[category]["accordion_item"]
+            accordion_item.setExpanded(not is_empty)
             shortcut = self.shortcut(category)
             shortcut.setHidden(is_empty)
 
@@ -293,7 +289,7 @@ class AbstractEmojiPicker(QWidget, ABC, metaclass=QtABCMeta):
     def reset(self):
         self.__line_edit.clear()
         self.__filter_emojis()
-        self.__scroll_area.verticalScrollBar().setValue(0)
+        self._accordion.resetScroll()
 
     def __open_button_context_menu(self, emoji: Emoji, item: QStandardItem, global_position: QPoint):
         context_menu = self._new_menu()
@@ -308,3 +304,6 @@ class AbstractEmojiPicker(QWidget, ABC, metaclass=QtABCMeta):
             add_action.triggered.connect(lambda: self.favorite.emit(emoji, item))
             context_menu.addAction(add_action)
         context_menu.exec(global_position)
+
+    def accordion(self) -> QAccordion:
+        return self._accordion

@@ -11,7 +11,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Theme Responsive Action Test")
+        self.setWindowTitle("Theme Responsive Action Example")
         self.setWindowIcon(colorize_icon_by_theme(qtawesome.icon("fa6b.python")))
         self.resize(250, 125)
 

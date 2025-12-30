@@ -11,7 +11,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Pager Test")
+        self.setWindowTitle("Pager Example")
         self.setWindowIcon(colorize_icon_by_theme(qtawesome.icon("fa6b.python")))
 
         pager = QPager()

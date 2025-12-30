@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QListWidgetItem
 
-from extra_qwidgets.abstract.abc_theme_responsive import AbstractThemeResponsive
+from extra_qwidgets.abstract.theme_responsive import AbstractThemeResponsive
 
 
 class QThemeResponsiveListItem(QListWidgetItem, AbstractThemeResponsive):

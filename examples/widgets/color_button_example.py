@@ -11,7 +11,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Color Button Test")
+        self.setWindowTitle("Color Button Example")
         self.setWindowIcon(colorize_icon_by_theme(qtawesome.icon("fa6b.python")))
 
         widget = QWidget()

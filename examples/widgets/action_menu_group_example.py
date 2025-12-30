@@ -12,7 +12,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Action Menu Group Test")
+        self.setWindowTitle("Action Menu Group Example")
         self.setWindowIcon(colorize_icon_by_theme(qtawesome.icon("fa6b.python")))
         self.resize(250, 125)
 

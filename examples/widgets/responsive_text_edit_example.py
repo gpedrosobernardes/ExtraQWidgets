@@ -9,7 +9,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("QTextEdit Test")
+        self.setWindowTitle("QExtraTextEdit Example")
         self.setWindowIcon(colorize_icon_by_theme(qtawesome.icon("fa6b.python")))
 
         self.text_edit = QExtraTextEdit()

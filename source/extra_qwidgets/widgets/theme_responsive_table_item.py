@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QTableWidgetItem
 
-from extra_qwidgets.abstract.abc_theme_responsive import AbstractThemeResponsive
+from extra_qwidgets.abstract.theme_responsive import AbstractThemeResponsive
 
 
 class QThemeResponsiveTableItem(QTableWidgetItem, AbstractThemeResponsive):

@@ -5,10 +5,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QRect
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 
+from extra_qwidgets.proxys.multi_filter import QMultiFilterProxy
 from extra_qwidgets.utils import colorize_icon_by_theme
 from extra_qwidgets.widgets.filterable_table.custom_header import CustomHeader
 from extra_qwidgets.widgets.filterable_table.filter_popup import QFilterPopup
-from extra_qwidgets.proxys.multi_filter_proxy import QMultiFilterProxy
 
 
 # https://doc.qt.io/

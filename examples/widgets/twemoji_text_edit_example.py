@@ -2,7 +2,7 @@ import qtawesome
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QApplication, QPushButton
 
 from extra_qwidgets.documents.twemoji_text_document import QTwemojiTextDocument
-from extra_qwidgets.widgets.twemoji_text_edit import QExtraTextEdit
+from extra_qwidgets.widgets.extra_text_edit import QExtraTextEdit
 from source.extra_qwidgets.utils import colorize_icon_by_theme
 
 
@@ -10,7 +10,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("QTwemojiTextEdit Test")
+        self.setWindowTitle("QTwemojiTextEdit Example")
         self.setWindowIcon(colorize_icon_by_theme(qtawesome.icon("fa6b.python")))
 
         self.text_edit = QExtraTextEdit()

@@ -11,7 +11,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Checkboxes Test")
+        self.setWindowTitle("Checkboxes Example")
         self.setFixedWidth(275)
         self.setWindowIcon(colorize_icon_by_theme(qtawesome.icon("fa6b.python")))
 

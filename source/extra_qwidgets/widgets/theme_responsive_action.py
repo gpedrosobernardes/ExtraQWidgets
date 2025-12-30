@@ -1,6 +1,6 @@
 from PySide6.QtGui import QAction
 
-from extra_qwidgets.abstract.abc_theme_responsive import AbstractThemeResponsive
+from extra_qwidgets.abstract.theme_responsive import AbstractThemeResponsive
 
 
 class QThemeResponsiveAction(QAction, AbstractThemeResponsive):

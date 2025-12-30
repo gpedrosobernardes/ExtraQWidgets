@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
         document.setLineLimit(1)
 
         emoji_picker = EmojiPicker()
+        emoji_picker.accordion().setFlat(True)
         emoji_picker.picked.connect(lambda emoji: text_edit.insertPlainText(Emoji(*emoji).emoji))
 
         # center line_edit on widget
