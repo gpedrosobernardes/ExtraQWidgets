@@ -1,9 +1,8 @@
 from PySide6.QtGui import QAction
+from extra_qwidgets.widgets.theme_responsive import ThemeResponsive
 
-from extra_qwidgets.abstract.theme_responsive import AbstractThemeResponsive
 
-
-class QThemeResponsiveAction(QAction, AbstractThemeResponsive):
+class QThemeResponsiveAction(QAction, ThemeResponsive):
     def __init__(self, *args, **kwargs):
         """
         A QAction that changes its icon color based on the current theme.
@@ -11,4 +10,4 @@ class QThemeResponsiveAction(QAction, AbstractThemeResponsive):
         :param kwargs: QAction's keyword arguments
         """
         super().__init__(*args, **kwargs)
-        AbstractThemeResponsive.__init__(self)
+        self._bind_theme_change()
