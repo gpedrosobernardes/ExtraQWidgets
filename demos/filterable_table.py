@@ -9,28 +9,30 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QHeaderView
 )
 
+from extra_qwidgets.icons import QThemeResponsiveIcon
 from extra_qwidgets.widgets.filterable_table.filterable_table import QFilterableTable
 
 
 class DemoTableWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Demo: QFilterableTable & FilterPopup")
+        self.setWindowTitle("QFilterableTable Demo")
+        self.setWindowIcon(QThemeResponsiveIcon.fromAwesome("fa6b.python"))
         self.resize(800, 600)
 
-        # Widget Central
+        # Central Widget
         central = QWidget()
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
 
-        # 1. Cabeçalho / Instruções
+        # 1. Header / Instructions
         header_layout = QHBoxLayout()
         lbl_instr = QLabel(
-            "<h3>Instruções:</h3>"
+            "<h3>Instructions:</h3>"
             "<ul>"
-            "<li>Clique no <b>ícone de filtro</b> (cabeçalho) para abrir o Popup.</li>"
-            "<li>Teste o <b>Select All</b> e a <b>Busca</b>.</li>"
-            "<li>Verifique se a lista do popup está ordenada alfabeticamente.</li>"
+            "<li>Click on the <b>filter icon</b> (header) to open the Popup.</li>"
+            "<li>Test <b>Select All</b> and <b>Search</b>.</li>"
+            "<li>Check if the popup list is sorted alphabetically.</li>"
             "</ul>"
         )
         lbl_instr.setWordWrap(True)
@@ -38,33 +40,33 @@ class DemoTableWindow(QMainWindow):
 
         layout.addLayout(header_layout)
 
-        # 2. A Tabela Filtrável
+        # 2. The Filterable Table
         self.table = QFilterableTable()
         self.table.setAlternatingRowColors(True)
 
-        # Estilo para melhor visualização (Colunas preenchem o espaço)
+        # Style for better visualization (Columns fill the space)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         layout.addWidget(self.table)
 
-        # 3. Popular Dados
+        # 3. Populate Data
         self.populate_data()
 
     def populate_data(self):
-        """Cria um modelo com dados fictícios para teste."""
+        """Creates a model with dummy data for testing."""
         model = QStandardItemModel()
 
-        # Colunas
-        headers = ["ID", "Nome", "Departamento", "Status", "Data", "Prioridade"]
+        # Columns
+        headers = ["ID", "Name", "Department", "Status", "Date", "Priority"]
         model.setHorizontalHeaderLabels(headers)
 
-        # Dados Dummy
-        departments = ["TI", "RH", "Financeiro", "Vendas", "Logística"]
-        names = ["Ana", "Bruno", "Carlos", "Daniela", "Eduardo", "Fernanda", "Gabriel", "Helena"]
-        statuses = ["Ativo", "Inativo", "Pendente", "Férias"]
-        priorities = ["Alta", "Média", "Baixa"]
+        # Dummy Data
+        departments = ["IT", "HR", "Finance", "Sales", "Logistics"]
+        names = ["James", "John", "William", "Henry", "George", "Edward", "Thomas", "Charles", "Arthur", "Robert"]
+        statuses = ["Active", "Inactive", "Pending", "Vacation"]
+        priorities = ["High", "Medium", "Low"]
 
-        # Gerar 100 linhas
+        # Generate 100 rows
         for i in range(1, 101):
             row_items = []
 
@@ -73,35 +75,35 @@ class DemoTableWindow(QMainWindow):
             it_id.setData(i, Qt.ItemDataRole.DisplayRole)
             row_items.append(it_id)
 
-            # Nome
-            name = f"{random.choice(names)} {random.choice(['Silva', 'Santos', 'Oliveira', 'Souza'])}"
+            # Name
+            name = f"{random.choice(names)} {random.choice(["Smith", "Johnson", "Brown", "Taylor", "Anderson", "Thompson", "Harris", "Walker", "White", "Clark"])}"
             row_items.append(QStandardItem(name))
 
-            # Departamento
+            # Department
             row_items.append(QStandardItem(random.choice(departments)))
 
             # Status
             status = random.choice(statuses)
             it_status = QStandardItem(status)
 
-            # Exemplo de formatação condicional simples
-            if status == "Ativo":
+            # Example of simple conditional formatting
+            if status == "Active":
                 it_status.setForeground(QColor("green"))
-            elif status == "Inativo":
+            elif status == "Inactive":
                 it_status.setForeground(QColor("red"))
 
             row_items.append(it_status)
 
-            # Data
+            # Date
             date = datetime.now() - timedelta(days=random.randint(0, 365))
             row_items.append(QStandardItem(date.strftime("%Y-%m-%d")))
 
-            # Prioridade
+            # Priority
             row_items.append(QStandardItem(random.choice(priorities)))
 
             model.appendRow(row_items)
 
-        # Injeta o modelo na tabela
+        # Injects the model into the table
         self.table.setModel(model)
 
 

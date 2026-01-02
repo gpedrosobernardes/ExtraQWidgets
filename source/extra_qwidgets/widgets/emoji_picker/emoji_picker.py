@@ -5,7 +5,7 @@ from PySide6.QtCore import QCoreApplication, Signal, QSize
 from PySide6.QtGui import QAction, QStandardItem, QFont
 from PySide6.QtWidgets import (QLineEdit, QHBoxLayout, QLabel, QVBoxLayout,
                                QMenu, QWidget, QApplication, QButtonGroup)
-# Mocks para as libs externas mencionadas no seu código original
+# Mocks for external libs mentioned in your original code
 # from extra_qwidgets.widgets.accordion import QAccordion
 from emojis.db import Emoji, get_emojis_by_category, get_categories
 
@@ -18,10 +18,10 @@ from extra_qwidgets.widgets.emoji_picker.emoji_image_provider import EmojiImageP
 
 
 class QEmojiPicker(QWidget):
-    # Sinais
+    # Signals
     picked = Signal(Emoji)  # Emoji object
     favorite = Signal(Emoji, QStandardItem)
-    removedFavorite = Signal(Emoji, QStandardItem)  # renomeado para camelCase
+    removedFavorite = Signal(Emoji, QStandardItem)  # renamed to camelCase
 
     _translations = {
         "Activities": QCoreApplication.translate("QEmojiPicker", "Activities"),
@@ -54,24 +54,24 @@ class QEmojiPicker(QWidget):
             "Recent": QThemeResponsiveIcon.fromAwesome("fa6s.clock-rotate-left")
         }
 
-        # Variáveis privadas
+        # Private variables
         self.__favorite_category = None
         self.__recent_category = None
-        self.__categories_data = {}  # Guarda referencias dos grids e layouts
-        # Layout dentro do scroll area onde os grids ficam
+        self.__categories_data = {}  # Stores references to grids and layouts
+        # Layout inside the scroll area where grids are located
         self.__accordion = QAccordion()
 
-        # Layout principal
+        # Main layout
         self.__main_layout = QVBoxLayout(self)
         self.__main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # 1. Barra de Busca
+        # 1. Search Bar
         self.__line_edit = self._create_search_line_edit()
 
         self.__main_layout.addWidget(self.__line_edit)
 
         self._shortcuts_container = QWidget()
-        self._shortcuts_container.setFixedHeight(40)  # Altura fixa para a barra
+        self._shortcuts_container.setFixedHeight(40)  # Fixed height for the bar
         self._shortcuts_layout = QHBoxLayout(self._shortcuts_container)
         self._shortcuts_layout.setContentsMargins(5, 0, 5, 0)
         self._shortcuts_layout.setSpacing(2)
@@ -95,7 +95,7 @@ class QEmojiPicker(QWidget):
 
         self.__setup_connections()
 
-        # Popula categorias (Idealmente isso seria Lazy, chamado apenas quando necessário)
+        # Populates categories (Ideally this would be Lazy, called only when needed)
         self.__add_base_categories()
 
         self.setFavoriteCategory(favorite_category)
@@ -119,10 +119,10 @@ class QEmojiPicker(QWidget):
 
     def __add_base_categories(self):
         """
-        Cria as categorias.
-        Nota: Em produção, carregue os itens dentro dos grids de forma assíncrona ou lazy.
+        Creates categories.
+        Note: In production, load items inside grids asynchronously or lazily.
         """
-        # Exemplo de categorias estáticas (substitua pela sua chamada ao DB)
+        # Example of static categories (replace with your DB call)
         for category_name in sorted(get_categories()):
             category = EmojiCategory(category_name, self._translations[category_name], self._icons[category_name])
             self.addCategory(category)
@@ -136,9 +136,9 @@ class QEmojiPicker(QWidget):
 
     @staticmethod
     def __populate_grid_items(grid: QEmojiGrid, category: str):
-        """Cria os itens do grid."""
-        # Aqui você chamaria get_emojis_by_category(category)
-        # Exemplo Mock:
+        """Creates grid items."""
+        # Here you would call get_emojis_by_category(category)
+        # Mock Example:
         emojis_mock = get_emojis_by_category(category)
 
         for emoji in emojis_mock:
@@ -146,14 +146,14 @@ class QEmojiPicker(QWidget):
         grid.updateGeometry()
 
     def __filter_emojis(self, text: str):
-        """Filtra todas as grids."""
+        """Filters all grids."""
         for category in self.__categories_data.values():
             grid = category.grid()
             section = category.accordionItem()
 
-            grid.filterContent(text) # Chama o método de filtro do grid
+            grid.filterContent(text) # Calls grid filter method
 
-            # Se o grid ficar vazio após filtro, esconde o título também
+            # If grid becomes empty after filter, hides title too
             is_empty = grid.allFiltered()
             grid.setVisible(not is_empty)
             section.setVisible(not is_empty)
@@ -161,19 +161,19 @@ class QEmojiPicker(QWidget):
     def __open_context_menu(self, emoji, item, global_pos):
         menu = QMenu(self)
 
-        # Lógica de Favorito
+        # Favorite Logic
         if self.__favorite_category:
             favorite_category = self.category("Favorites")
             grid = favorite_category.grid()
             if grid.emojiItem(emoji):
-                action_unfav = QAction(QCoreApplication.translate("QEmojiPicker", "Remover dos favoritos"), self)
+                action_unfav = QAction(self.tr("Remove from favorites"), self)
                 action_unfav.triggered.connect(lambda: self.removedFavorite.emit(emoji, item))
                 menu.addAction(action_unfav)
             else:
-                action_fav = QAction(QCoreApplication.translate("QEmojiPicker", "Adicionar aos favoritos"), self)
+                action_fav = QAction(self.tr("Add to favorites"), self)
                 action_fav.triggered.connect(lambda: self.favorite.emit(emoji, item))
                 menu.addAction(action_fav)
-        copy_alias = QAction(QCoreApplication.translate("QEmojiPicker", "Copiar alias"), self)
+        copy_alias = QAction(self.tr("Copy alias"), self)
         copy_alias.triggered.connect(lambda: self.__copy_emoji_alias(emoji))
         menu.addAction(copy_alias)
 
@@ -231,19 +231,19 @@ class QEmojiPicker(QWidget):
         line_edit = QLineEdit()
         line_edit.setFont(font)
         line_edit.setPlaceholderText(
-            QCoreApplication.translate("QEmojiPicker", "Pesquisar emoji...")
+            QCoreApplication.translate("QEmojiPicker", "Search emoji...")
         )
         line_edit.setClearButtonEnabled(True)
-        # Ícone de busca usando qtawesome
+        # Search icon using qtawesome
         line_edit.addAction(QThemeResponsiveIcon.fromAwesome("fa6s.magnifying-glass"), QLineEdit.ActionPosition.LeadingPosition)
         return line_edit
 
-    # --- API Pública (camelCase) ---
+    # --- Public API (camelCase) ---
 
     def resetPicker(self):
-        """Reseta o estado do picker."""
+        """Resets picker state."""
         self.__line_edit.clear()
-        # Scroll para o topo
+        # Scroll to top
         self._accordion.scroll.verticalScrollBar().setValue(0)
 
     def addCategory(self, category: EmojiCategory, shortcut_position: int = -1, section_position: int = -1):
@@ -251,13 +251,13 @@ class QEmojiPicker(QWidget):
 
         # Grid
         grid = category.grid()
-        # Conecta sinais do grid aos sinais do Picker
+        # Connect grid signals to Picker signals
         grid.emojiClicked.connect(lambda emoji, item: self.picked.emit(emoji))
         grid.mouseEnteredEmoji.connect(self.__on_mouse_enter_emoji)
         grid.mouseLeftEmoji.connect(self.__on_mouse_left_emoji)
         grid.contextMenu.connect(self.__open_context_menu)
 
-        # Seção da Categoria
+        # Category Section
         section = category.accordionItem()
         self.__accordion.addAccordionItem(section, section_position)
 

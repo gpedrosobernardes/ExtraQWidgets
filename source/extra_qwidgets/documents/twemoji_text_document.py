@@ -10,7 +10,7 @@ from extra_qwidgets.widgets.emoji_picker.emoji_image_provider import EmojiImageP
 
 
 class QTwemojiTextDocument(QTextDocument):
-    # Regex compilado estático para performance
+    # Static compiled regex for performance
     _EMOJI_PATTERN = R"(?:\x{1F3F4}(?:\x{E0067}\x{E0062}\x{E0065}\x{E006E}\x{E0067}|\x{E0067}\x{E0062}\x{E0073}\x{E0063}\x{E0074}|\x{E0067}\x{E0062}\x{E0077}\x{E006C}\x{E0073})\x{E007F})|(?:[\x{0030}-\x{0039}\x{0023}\x{002A}]\x{FE0F}?\x{20E3})|(?:[\x{1F1E6}-\x{1F1FF}]{2})|(?:\p{Extended_Pictographic}\x{FE0F}?(?:[\x{1F3FB}-\x{1F3FF}])?(?:\x{200D}\p{Extended_Pictographic}\x{FE0F}?(?:[\x{1F3FB}-\x{1F3FF}])?)*)"
     _ALIAS_PATTERN = R"(:\w+:)"
 
@@ -21,16 +21,16 @@ class QTwemojiTextDocument(QTextDocument):
         self._alias_replacement = False
         self._line_limit = 0
 
-        # Variável para rastrear onde a edição ocorreu (Otimização B)
+        # Variable to track where the edit occurred (Optimization B)
         self._last_change_pos = 0
 
         self.setTwemoji(twemoji)
         self.setAliasReplacement(alias_replacement)
 
-        # Conecta o sinal 'Change' (antes do Changed) para capturar a posição
+        # Connects the 'Change' signal (before Changed) to capture the position
         self.contentsChange.connect(self._on_contents_change)
 
-    # --- Configurações ---
+    # --- Configurations ---
 
     def lineLimit(self) -> int:
         return self._line_limit
@@ -56,7 +56,7 @@ class QTwemojiTextDocument(QTextDocument):
 
         if value:
             self.contentsChanged.connect(self._twemojize)
-            # Na ativação inicial, processa o documento todo
+            # On initial activation, process the entire document
             self._twemojize_full()
         else:
             try:
@@ -83,10 +83,10 @@ class QTwemojiTextDocument(QTextDocument):
             except RuntimeError:
                 pass
 
-    # --- Lógica Principal (Otimização B aplicada) ---
+    # --- Main Logic (Optimization B applied) ---
 
     def _on_contents_change(self, position, chars_removed, chars_added):
-        """Captura a posição da mudança antes que ela seja processada."""
+        """Captures the change position before it is processed."""
         self._last_change_pos = position
 
     def _ensure_resource_loaded(self, emoji: Emoji, size: int):
@@ -113,10 +113,10 @@ class QTwemojiTextDocument(QTextDocument):
 
     def _twemojize(self):
         """
-        Versão OTIMIZADA: Processa apenas o bloco (parágrafo) atual.
-        Chamada automaticamente a cada alteração de texto.
+        OPTIMIZED version: Processes only the current block (paragraph).
+        Called automatically on every text change.
         """
-        # 1. Identifica o bloco onde a edição ocorreu
+        # 1. Identifies the block where the edit occurred
         block = self.findBlock(self._last_change_pos)
         if not block.isValid():
             return
@@ -124,12 +124,12 @@ class QTwemojiTextDocument(QTextDocument):
         text = block.text()
         block_pos = block.position()
 
-        # 2. Busca emojis apenas neste texto curto
+        # 2. Searches for emojis only in this short text
         regex = QRegularExpression(self._EMOJI_PATTERN, QRegularExpression.PatternOption.UseUnicodePropertiesOption)
         iterator = regex.globalMatch(text)
 
-        # 3. Coleta correspondências para processar de trás para frente
-        # (Importante para não invalidar índices ao substituir texto por imagem)
+        # 3. Collects matches to process backwards
+        # (Important not to invalidate indices when replacing text with image)
         matches = []
         while iterator.hasNext():
             match = iterator.next()
@@ -142,15 +142,15 @@ class QTwemojiTextDocument(QTextDocument):
         font_height = self._font_height(cursor)
         emoji_size = int(font_height * 0.9)
 
-        # 4. Inicia bloco de edição para Undo/Redo atômico
+        # 4. Starts edit block for atomic Undo/Redo
         cursor.beginEditBlock()
 
-        # Processa em ordem reversa (do fim da linha para o começo)
+        # Process in reverse order (from end of line to start)
         for match in reversed(matches):
             start_rel = match.capturedStart(0)
             end_rel = match.capturedEnd(0)
 
-            # Converte posição relativa do bloco para absoluta do documento
+            # Converts relative block position to absolute document position
             abs_start = block_pos + start_rel
             abs_end = block_pos + end_rel
 
@@ -171,12 +171,12 @@ class QTwemojiTextDocument(QTextDocument):
         cursor.endEditBlock()
 
     def _twemojize_full(self):
-        """Versão completa para uso na inicialização (scan total)."""
+        """Full version for use at initialization (total scan)."""
         cursor = QTextCursor(self)
         font_height = self._font_height(cursor)
         emoji_size = int(font_height * 0.9)
 
-        # Usa a lógica antiga de escanear tudo (_localize_emojis retorna lista reversa)
+        # Uses the old logic of scanning everything (_localize_emojis returns reversed list)
         for emoji_str, start, end in self._localize_emojis():
             cursor.setPosition(start, QTextCursor.MoveMode.MoveAnchor)
             cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
@@ -193,9 +193,9 @@ class QTwemojiTextDocument(QTextDocument):
 
     def _replace_alias(self):
         """
-        Substituição de alias (:smile:).
-        Também poderia ser otimizado para _last_change_pos, mas alias é menos frequente.
-        Mantido lógica global por segurança, ou pode-se aplicar a mesma lógica do _twemojize.
+        Alias replacement (:smile:).
+        Could also be optimized for _last_change_pos, but alias is less frequent.
+        Kept global logic for safety, or the same logic as _twemojize could be applied.
         """
         cursor = QTextCursor(self)
         font_height = self._font_height(cursor)
@@ -216,7 +216,7 @@ class QTwemojiTextDocument(QTextDocument):
                 with QSignalBlocker(self):
                     cursor.insertText(emoji.emoji)
 
-    # --- Helpers e Utilitários ---
+    # --- Helpers and Utilities ---
 
     def _limit_line(self, position, chars_removed, chars_added):
         if self._line_limit <= 0:
@@ -257,7 +257,7 @@ class QTwemojiTextDocument(QTextDocument):
             block = block.next()
         return result
 
-    # --- Helpers de Regex e Cores ---
+    # --- Regex and Color Helpers ---
 
     def _localize_alias(self):
         regex = QRegularExpression(self._ALIAS_PATTERN)
@@ -272,7 +272,7 @@ class QTwemojiTextDocument(QTextDocument):
         return matches
 
     def _localize_emojis(self):
-        # Usado apenas pelo _twemojize_full ou _detwemojize
+        # Used only by _twemojize_full or _detwemojize
         regex = QRegularExpression(self._EMOJI_PATTERN, QRegularExpression.PatternOption.UseUnicodePropertiesOption)
         iterator = regex.globalMatch(self.toPlainText())
         matches = []
@@ -313,7 +313,7 @@ class QTwemojiTextDocument(QTextDocument):
 
     @staticmethod
     def _get_emoji_colors(emoji: str) -> typing.Set[str]:
-        # Correção do iterador aplicada aqui também
+        # Iterator correction applied here too
         re_color = QRegularExpression(R"[\x{1F3FB}-\x{1F3FF}]")
         iterator = re_color.globalMatch(emoji)
         matches = set()

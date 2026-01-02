@@ -1,5 +1,4 @@
 from PySide6.QtCore import QSortFilterProxyModel, QModelIndex, Qt
-from emojis.db import Emoji
 
 
 class EmojiSortFilterProxyModel(QSortFilterProxyModel):

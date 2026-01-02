@@ -7,8 +7,8 @@ from extra_qwidgets.widgets.emoji_picker.emoji_image_provider import EmojiImageP
 
 class EmojiDelegate(QStyledItemDelegate):
     """
-    Renderiza o Emoji. Se for uma imagem, desenha o Pixmap.
-    Se for fonte, desenha o texto. Isso economiza memória em comparação a criar QIcons.
+    Renders the Emoji. If it's an image, draws the Pixmap.
+    If it's font, draws the text. This saves memory compared to creating QIcons.
     """
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index):
@@ -21,17 +21,17 @@ class EmojiDelegate(QStyledItemDelegate):
         rect = getattr(option, "rect")
         palette = getattr(option, "palette")
 
-        # 1. Desenhar o fundo (hover/seleção)
+        # 1. Draw background (hover/selection)
         if state & QStyle.StateFlag.State_Selected:
             painter.fillRect(rect, palette.highlight())
         elif state & QStyle.StateFlag.State_MouseOver:
             painter.fillRect(rect, palette.midlight())
 
-        # 2. Obter dados do Emoji
-        # Assumindo que você guardou o caminho do arquivo ou o código no UserRole
+        # 2. Get Emoji data
+        # Assuming you stored the file path or code in UserRole
         emoji_data = index.data(Qt.ItemDataRole.UserRole)
 
-        # 3. Definir o retângulo onde o ícone será desenhado (com padding)
+        # 3. Define the rectangle where the icon will be drawn (with padding)
         icon_rect = getattr(option, "rect")
         icon_rect_adjusted = icon_rect.adjusted(4, 4, -4, -4)
 
@@ -41,10 +41,10 @@ class EmojiDelegate(QStyledItemDelegate):
             painter.device().devicePixelRatio()
         )
 
-        # 4. Desenhar
+        # 4. Draw
         if not pixmap.isNull():
-            # Centralizar
-            # Como o pixmap tem devicePixelRatio configurado, usamos as dimensões lógicas (divididas por dpr) para alinhar
+            # Center
+            # Since pixmap has devicePixelRatio configured, we use logical dimensions (divided by dpr) to align
             logical_w = pixmap.width() / pixmap.devicePixelRatio()
             logical_h = pixmap.height() / pixmap.devicePixelRatio()
 
@@ -56,4 +56,4 @@ class EmojiDelegate(QStyledItemDelegate):
         painter.restore()
 
     def sizeHint(self, option, index):
-        return QSize(40, 40)  # Tamanho fixo para performance
+        return QSize(40, 40)  # Fixed size for performance

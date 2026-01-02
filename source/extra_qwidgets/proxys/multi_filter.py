@@ -9,7 +9,7 @@ class QMultiFilterProxy(QSortFilterProxyModel):
         self._filters = {}
 
     def setFilter(self, col: int, text_list: typing.Iterable[str]):
-        """Define a lista de filtros para uma coluna específica."""
+        """Sets the list of filters for a specific column."""
         if text_list:
             self._filters[col] = text_list
         else:
@@ -17,7 +17,7 @@ class QMultiFilterProxy(QSortFilterProxyModel):
         self.invalidateFilter()
 
     def filterAcceptsRow(self, source_row, source_parent):
-        """Verifica se a linha passa nos filtros."""
+        """Checks if the row passes the filters."""
         model = self.sourceModel()
         for col, text_list in self._filters.items():
             index = model.index(source_row, col, source_parent)

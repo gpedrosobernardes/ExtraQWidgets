@@ -11,7 +11,7 @@ from extra_qwidgets.widgets.emoji_picker.emoji_delegate import EmojiDelegate
 
 
 class QEmojiGrid(QListView):
-    # Sinais
+    # Signals
     mouseEnteredEmoji = Signal(Emoji, QStandardItem)  # object = Emoji
     mouseLeftEmoji = Signal(Emoji, QStandardItem)
     emojiClicked = Signal(Emoji, QStandardItem)
@@ -26,7 +26,7 @@ class QEmojiGrid(QListView):
 
         self.__model = QStandardItemModel(self)
 
-        # Assumindo que você tem o Proxy importado ou definido
+        # Assuming you have the Proxy imported or defined
         self.__last_index = None
         self.__limit = float("inf")
         self.__limit_treatment = None
@@ -34,78 +34,78 @@ class QEmojiGrid(QListView):
         self.__proxy.setSourceModel(self.__model)
         self.setModel(self.__proxy)
 
-        self.setMouseTracking(True)  # Essencial para o hover funcionar
+        self.setMouseTracking(True)  # Essential for hover to work
         self.setIconSize(QSize(36, 36))
         self.setGridSize(QSize(40, 40))
 
-        # Configuração de performance
+        # Performance configuration
         self.setItemDelegate(EmojiDelegate(self))
 
-        # Configurações padrão
+        # Default settings
         self.setViewMode(QListView.ViewMode.IconMode)
         self.setResizeMode(QListView.ResizeMode.Adjust)
         self.setUniformItemSizes(True)
         self.setWrapping(True)
         self.setDragEnabled(False)
 
-        # Desliga as barras de rolagem (o pai deve rolar)
+        # Turn off scroll bars (parent should scroll)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        # Política de tamanho: Expande horizontalmente, Fixo verticalmente (baseado no sizeHint)
+        # Size policy: Expands horizontally, Fixed vertically (based on sizeHint)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Minimum)
 
-        # Ajuste nativo (ajuda, mas o sizeHint faz o trabalho pesado)
+        # Native adjustment (helps, but sizeHint does the heavy lifting)
         self.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
 
     def sizeHint(self) -> QSize:
         """
-        Diz ao Layout pai qual o tamanho ideal deste widget.
-        O Qt chama isso automaticamente quando o layout é invalidado.
+        Tells the parent Layout the ideal size of this widget.
+        Qt calls this automatically when the layout is invalidated.
         """
         if self.model() is None or self.model().rowCount() == 0:
             return QSize(0, 0)
 
-        # Largura disponível (se o widget ainda não foi mostrado, usa um valor padrão)
+        # Available width (if widget hasn't been shown yet, use a default value)
         width = self.width() if self.width() > 0 else 400
 
-        # Dimensões do grid
+        # Grid dimensions
         grid_sz = self.gridSize()
         if grid_sz.isEmpty():
             grid_sz = QSize(40, 40)  # Fallback
 
-        # Cálculo matemático
+        # Mathematical calculation
         item_width = grid_sz.width()
         item_height = grid_sz.height()
 
-        # Quantos cabem por linha?
+        # How many fit per row?
         items_per_row = max(1, width // item_width)
 
-        # Quantas linhas precisamos?
+        # How many rows do we need?
         total_items = self.model().rowCount()
         rows = (total_items + items_per_row - 1) // items_per_row  # Ceil division
 
-        height = rows * item_height + 5  # +5 padding de segurança
+        height = rows * item_height + 5  # +5 safety padding
 
         return QSize(width, height)
 
     def resizeEvent(self, event):
         """
-        Quando a largura muda, o número de linhas muda.
-        Precisamos avisar o layout para ler o sizeHint() de novo.
+        When width changes, the number of rows changes.
+        We need to notify the layout to read sizeHint() again.
         """
         super().resizeEvent(event)
         self.updateGeometry()
 
-    # --- Eventos (snake_case padrão Python/Qt) ---
+    # --- Events (standard Python/Qt snake_case) ---
 
     def mouseMoveEvent(self, e: QMouseEvent):
-        """Gerencia a detecção de entrada/saída do mouse nos itens."""
+        """Manages mouse entry/exit detection on items."""
         super().mouseMoveEvent(e)
 
         index = self.indexAt(e.pos())
 
-        # Se o mouse saiu de um item válido ou entrou no vazio
+        # If mouse left a valid item or entered void
         if self.__last_index and (not index.isValid() or index != self.__last_index):
             item = self.__get_item_from_index(self.__last_index)
             if item:
@@ -113,7 +113,7 @@ class QEmojiGrid(QListView):
                 self.mouseLeftEmoji.emit(emoji, item)
             self.__last_index = None
 
-        # Se o mouse entrou num novo item
+        # If mouse entered a new item
         if index.isValid() and index != self.__last_index:
             self.__last_index = index
             item = self.__get_item_from_index(index)
@@ -122,7 +122,7 @@ class QEmojiGrid(QListView):
                 self.mouseEnteredEmoji.emit(emoji, item)
 
     def leaveEvent(self, e: QEvent):
-        """Garante que o sinal de saída seja emitido ao sair do widget."""
+        """Ensures exit signal is emitted when leaving the widget."""
         if self.__last_index:
             item = self.__get_item_from_index(self.__last_index)
             if item:
@@ -132,7 +132,7 @@ class QEmojiGrid(QListView):
         super().leaveEvent(e)
 
     def mouseReleaseEvent(self, e: QMouseEvent):
-        """Gerencia o clique."""
+        """Manages click."""
         super().mouseReleaseEvent(e)
         if e.button() == Qt.MouseButton.LeftButton:
             index = self.indexAt(e.pos())
@@ -142,17 +142,17 @@ class QEmojiGrid(QListView):
                 self.emojiClicked.emit(emoji, item)
 
     def contextMenuEvent(self, e):
-        """Gerencia menu de contexto."""
+        """Manages context menu."""
         index = self.indexAt(e.pos())
         if index.isValid():
             item = self.__get_item_from_index(index)
             emoji = item.data(Qt.ItemDataRole.UserRole)
             self.contextMenu.emit(emoji, item, self.mapToGlobal(e.pos()))
 
-    # --- Métodos Privados Auxiliares ---
+    # --- Private Helper Methods ---
 
     def __get_item_from_index(self, index):
-        # Se estiver usando proxy, precisa mapear
+        # If using proxy, needs mapping
         if isinstance(index.model(), QAbstractProxyModel):
             index = self.__proxy.mapToSource(index)
         return self.__model.itemFromIndex(index)
@@ -170,15 +170,15 @@ class QEmojiGrid(QListView):
         elif self.__limit_treatment == self.LimitTreatment.RemoveLastOne:
             self.__model.removeRow(self.__model.rowCount() - 1)
 
-    # --- API Pública (camelCase) ---
+    # --- Public API (camelCase) ---
     def addEmoji(self, emoji: Emoji, update_geometry: bool = True):
-        """Adiciona um item ao modelo."""
+        """Adds an item to the model."""
         if self.__model.rowCount() + 1 > self.__limit:
             self.__treat_limit()
 
         if self.__model.rowCount() < self.__limit:
             self.__model.appendRow(self._create_emoji_item(emoji))
-            # Chama ajuste de altura após adicionar (pode ser otimizado para chamar só uma vez no final)
+            # Calls height adjustment after adding (can be optimized to call only once at the end)
             if update_geometry:
                 self.updateGeometry()
 
@@ -190,9 +190,9 @@ class QEmojiGrid(QListView):
         return None
 
     def removeEmoji(self, emoji: Emoji, update_geometry: bool = True):
-        """Remove um emoji específico."""
-        # A lógica de busca depende de como o dado está guardado.
-        # Exemplo simples iterando (lento para muitos itens, ideal seria um dict de mapeamento)
+        """Removes a specific emoji."""
+        # Search logic depends on how data is stored.
+        # Simple example iterating (slow for many items, ideal would be a mapping dict)
         match = self.emojiItem(emoji)
         if match:
             self.__model.removeRow(match.row())
@@ -200,13 +200,13 @@ class QEmojiGrid(QListView):
                 self.updateGeometry()
 
     def allFiltered(self) -> bool:
-        """Retorna True se todos os itens estiverem filtrados (escondidos pelo Proxy)."""
+        """Returns True if all items are filtered (hidden by Proxy)."""
         return self.__proxy.rowCount() == 0
 
     def filterContent(self, text: str):
-        """Aplica filtro."""
+        """Applies filter."""
         self.__proxy.setFilterFixedString(text)
-        self.updateGeometry() # Reajusta altura baseado no que sobrou
+        self.updateGeometry() # Readjusts height based on what's left
 
     def setLimit(self, limit: int):
         self.__limit = limit

@@ -6,42 +6,42 @@ from PySide6.QtGui import QPixmap, QPixmapCache, QImageReader, Qt
 
 class EmojiImageProvider:
     """
-    Classe responsável exclusivamente por carregar, dimensionar e cachear
-    imagens de emojis.
+    Class exclusively responsible for loading, resizing, and caching
+    emoji images.
     """
 
     @staticmethod
     def get_pixmap(emoji_data: Emoji, size: QSize, dpr: float = 1.0) -> QPixmap:
         """
-        Retorna um QPixmap pronto para ser desenhado.
+        Returns a QPixmap ready to be drawn.
 
-        :param emoji_data: Objeto contendo o caminho ou código do emoji.
-        :param size: QSize desejado (tamanho lógico).
-        :param dpr: Device Pixel Ratio (para telas Retina/4K).
+        :param emoji_data: Object containing the emoji path or code.
+        :param size: Desired QSize (logical size).
+        :param dpr: Device Pixel Ratio (for Retina/4K screens).
         """
 
-        # 1. Calcular tamanho físico real (pixels)
+        # 1. Calculate real physical size (pixels)
         target_width = int(size.width() * dpr)
         target_height = int(size.height() * dpr)
 
-        # 2. Gerar chave única para o Cache
+        # 2. Generate unique key for Cache
         # Ex: "emoji_1f600_64x64"
         emoji_alias = emoji_data[0][0]
         cache_key = f"emoji_{emoji_alias}"
 
-        # 3. Tentar buscar no Cache
+        # 3. Try to fetch from Cache
         pixmap = QPixmap()
         if QPixmapCache.find(cache_key, pixmap):
             return pixmap
 
-        # --- CACHE MISS (Carregar do disco) ---
+        # --- CACHE MISS (Load from disk) ---
 
-        # 4. Carregar usando QImageReader (mais eficiente que QPixmap(path))
+        # 4. Load using QImageReader (more efficient than QPixmap(path))
         emoji_path = str(get_emoji_path(emoji_data[1]))
         reader = QImageReader(emoji_path)
 
         if reader.canRead():
-            # Importante para SVG: Define o tamanho de renderização antes de ler
+            # Important for SVG: Define render size before reading
             reader.setScaledSize(QSize(target_width, target_height))
 
             image = reader.read()
@@ -49,11 +49,11 @@ class EmojiImageProvider:
                 pixmap = QPixmap.fromImage(image)
                 pixmap.setDevicePixelRatio(dpr)
 
-                # Salvar no cache para o futuro
+                # Save to cache for future
                 QPixmapCache.insert(cache_key, pixmap)
                 return pixmap
 
-        # 5. Fallback (Retorna um pixmap transparente ou placeholder em caso de erro)
+        # 5. Fallback (Returns a transparent pixmap or placeholder in case of error)
         fallback = QPixmap(size * dpr)
         fallback.fill(Qt.GlobalColor.transparent)
         fallback.setDevicePixelRatio(dpr)

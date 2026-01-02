@@ -16,43 +16,43 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Accordion Full Demo")
+        self.setWindowTitle("QAccordion Demo")
         self.resize(900, 700)
 
-        # Tenta carregar ícone, fallback se não tiver o utilitário configurado
+        # Try to load icon, fallback if utility is not configured
         self.setWindowIcon(QThemeResponsiveIcon.fromAwesome("fa6b.python"))
 
-        # Widget Principal
+        # Main Widget
         main_widget = QWidget()
         main_layout = QHBoxLayout(main_widget)
 
-        # --- 1. Criação do Accordion ---
+        # --- 1. Accordion Creation ---
         self.accordion = QAccordion()
         self.populate_accordion()
 
-        # --- 2. Painel de Controle (Lado Esquerdo) ---
+        # --- 2. Control Panel (Left Side) ---
         control_panel = self.create_control_panel()
 
-        # Adiciona ao layout: Controles na esquerda (1/3), Accordion na direita (2/3)
+        # Add to layout: Controls on left (1/3), Accordion on right (2/3)
         main_layout.addWidget(control_panel, 1)
         main_layout.addWidget(self.accordion, 2)
 
         self.setCentralWidget(main_widget)
 
     def create_control_panel(self) -> QWidget:
-        """Cria um painel lateral para testar as funções públicas do Accordion."""
+        """Creates a side panel to test public Accordion functions."""
         panel = QWidget()
         layout = QVBoxLayout(panel)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        # --- Grupo: Visibilidade ---
-        grp_vis = QGroupBox("Visibilidade Global")
+        # --- Group: Visibility ---
+        grp_vis = QGroupBox("Global Visibility")
         v_layout = QVBoxLayout()
 
-        btn_expand = QPushButton("Expandir Tudo (expandAll)")
+        btn_expand = QPushButton("Expand All (expandAll)")
         btn_expand.clicked.connect(self.accordion.expandAll)
 
-        btn_collapse = QPushButton("Recolher Tudo (collapseAll)")
+        btn_collapse = QPushButton("Collapse All (collapseAll)")
         btn_collapse.clicked.connect(self.accordion.collapseAll)
 
         v_layout.addWidget(btn_expand)
@@ -60,12 +60,12 @@ class MainWindow(QMainWindow):
         grp_vis.setLayout(v_layout)
         layout.addWidget(grp_vis)
 
-        # --- Grupo: Estilo do Ícone ---
-        grp_style = QGroupBox("Estilo do Ícone (setIconStyle)")
+        # --- Group: Icon Style ---
+        grp_style = QGroupBox("Icon Style (setIconStyle)")
         v_style = QVBoxLayout()
         bg_style = QButtonGroup(self)
 
-        rb_arrow = QRadioButton("Arrow (Seta)")
+        rb_arrow = QRadioButton("Arrow")
         rb_arrow.setChecked(True)
         rb_arrow.toggled.connect(lambda: self.accordion.setIconStyle(QAccordionHeader.IndicatorStyle.Arrow))
 
@@ -79,16 +79,16 @@ class MainWindow(QMainWindow):
         grp_style.setLayout(v_style)
         layout.addWidget(grp_style)
 
-        # --- Grupo: Posição do Ícone ---
-        grp_pos = QGroupBox("Posição do Ícone (setIconPosition)")
+        # --- Group: Icon Position ---
+        grp_pos = QGroupBox("Icon Position (setIconPosition)")
         v_pos = QVBoxLayout()
         bg_pos = QButtonGroup(self)
 
-        rb_left = QRadioButton("Esquerda (Left)")
+        rb_left = QRadioButton("Left")
         rb_left.setChecked(True)
         rb_left.toggled.connect(lambda: self.accordion.setIconPosition(QAccordionHeader.IconPosition.LeadingPosition))
 
-        rb_right = QRadioButton("Direita (Right)")
+        rb_right = QRadioButton("Right")
         rb_right.toggled.connect(lambda: self.accordion.setIconPosition(QAccordionHeader.IconPosition.TrailingPosition))
 
         bg_pos.addButton(rb_left)
@@ -98,8 +98,8 @@ class MainWindow(QMainWindow):
         grp_pos.setLayout(v_pos)
         layout.addWidget(grp_pos)
 
-        # --- Grupo: Aparência ---
-        grp_look = QGroupBox("Aparência")
+        # --- Group: Appearance ---
+        grp_look = QGroupBox("Appearance")
         v_look = QVBoxLayout()
 
         chk_flat = QCheckBox("Flat Mode (setFlat)")
@@ -109,75 +109,68 @@ class MainWindow(QMainWindow):
         grp_look.setLayout(v_look)
         layout.addWidget(grp_look)
 
-        # --- Grupo: Scroll ---
-        grp_scroll = QGroupBox("Teste de Scroll")
+        # --- Group: Scroll ---
+        grp_scroll = QGroupBox("Scroll Test")
         v_scroll = QVBoxLayout()
 
-        btn_scroll_top = QPushButton("Reset Scroll (Topo)")
+        btn_scroll_top = QPushButton("Reset Scroll (Top)")
         btn_scroll_top.clicked.connect(self.accordion.resetScroll)
 
-        # Vamos rolar até o item 4 (texto longo)
-        btn_scroll_item = QPushButton("Scroll p/ Item Longo")
+        # Scroll to item 4 (long text)
+        btn_scroll_item = QPushButton("Scroll to Long Item")
         btn_scroll_item.clicked.connect(
             lambda: self.accordion.scrollToItem(self.item_long_text)
         )
 
-        # Vamos rolar apenas até o Header do Item 5
-        btn_scroll_header = QPushButton("Scroll p/ Header Form")
-        btn_scroll_header.clicked.connect(
-            lambda: self.accordion.scrollToHeader(self.item_form)
-        )
-
         v_scroll.addWidget(btn_scroll_top)
         v_scroll.addWidget(btn_scroll_item)
-        v_scroll.addWidget(btn_scroll_header)
         grp_scroll.setLayout(v_scroll)
         layout.addWidget(grp_scroll)
 
         return panel
 
     def populate_accordion(self):
-        """Adiciona seções variadas para demonstrar versatilidade."""
+        """Adds varied sections to demonstrate versatility."""
 
-        # 1. Widget Simples
-        self.accordion.addSection("1. Introdução", QLabel(
-            "Este é um Accordion dinâmico em PySide6.\nUse o painel à esquerda para testar."))
+        # 1. Simple Widget
+        self.accordion.addSection("1. Introduction", QLabel(
+            "This is a dynamic Accordion in PySide6.\nUse the left panel to test."))
 
-        # 2. Configuração Individual (Override)
-        # Este item não deve obedecer aos botões globais se configurarmos manualmente depois?
-        # Nota: O método setIconPosition global itera sobre todos.
-        # Aqui apenas mostramos que podemos adicionar e configurar na hora.
+        # 2. Individual Configuration (Override)
+        # Should this item obey global buttons if manually configured later?
+        # Note: The global setIconPosition method iterates over all.
+        # Here we just show that we can add and configure on the fly.
         lbl_custom = QLabel(
-            "Este item foi adicionado e configurado individualmente\ncom ícone na direita inicialmente.")
-        item_custom = self.accordion.addSection("2. Item Configurado Manualmente", lbl_custom)
+            "This item was added and configured individually\nwith icon on the right initially.")
+        item_custom = self.accordion.addSection("2. Manually Configured Item", lbl_custom)
         item_custom.setIconPosition("right")
 
-        # 3. Layout Aninhado (Botões e ações)
+        # 3. Nested Layout (Buttons and actions)
         widget_actions = QWidget()
         layout_actions = QHBoxLayout(widget_actions)
-        layout_actions.addWidget(QPushButton("Ação 1"))
-        layout_actions.addWidget(QPushButton("Ação 2"))
-        layout_actions.addWidget(QPushButton("Ação 3"))
-        self.accordion.addSection("3. Container de Botões", widget_actions)
+        layout_actions.addWidget(QPushButton("Action 1"))
+        layout_actions.addWidget(QPushButton("Action 2"))
+        layout_actions.addWidget(QPushButton("Action 3"))
+        self.accordion.addSection("3. Button Container", widget_actions)
 
-        # 4. Texto Longo (Para testar Scroll)
+        # 4. Long Text (To test Scroll)
         long_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n" * 20
         txt_edit = QTextEdit()
         txt_edit.setPlainText(long_text)
-        txt_edit.setMinimumHeight(200)  # Forçar altura para testar scroll do accordion
-        self.item_long_text = self.accordion.addSection("4. Conteúdo Longo (Scroll Test)", txt_edit)
+        txt_edit.setMinimumHeight(200)  # Force height to test accordion scroll
+        self.item_long_text = self.accordion.addSection("4. Long Content (Scroll Test)", txt_edit)
 
-        # 5. Formulário Complexo
+        # 5. Complex Form
         form_widget = QWidget()
         form_layout = QFormLayout(form_widget)
-        form_layout.addRow("Nome:", QLineEdit())
+        form_layout.addRow("Name:", QLineEdit())
         form_layout.addRow("Email:", QLineEdit())
-        form_layout.addRow("Aceita Termos:", QCheckBox())
-        self.item_form = self.accordion.addSection("5. Formulário de Cadastro", form_widget)
+        form_layout.addRow("Accept Terms:", QCheckBox())
+        self.item_form = self.accordion.addSection("5. Registration Form", form_widget)
 
-        # 6. Mais itens para encher espaço
+        # 6. More items to fill space
         for i in range(6, 10):
-            self.accordion.addSection(f"{i}. Item Extra", QLabel(f"Conteúdo do item {i}"))
+            self.accordion.addSection(f"{i}. Extra Item", QLabel(f"Content of item {i}"))
 
 
 if __name__ == '__main__':

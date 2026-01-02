@@ -7,27 +7,23 @@ from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QSizePolicy,
 from extra_qwidgets.icons import QThemeResponsiveIcon
 
 
-# Certifique-se de que o arquivo icons.py está no mesmo diretório ou ajuste a importação
-
-
-
 class QAccordionHeader(QFrame):
     clicked = Signal()
 
     IconPosition = QLineEdit.ActionPosition
 
     class IndicatorStyle(IntEnum):
-        Arrow = auto()  # Seta (> v)
-        PlusMinus = auto()  # Mais/Menos (+ -)
+        Arrow = auto()  # Arrow (> v)
+        PlusMinus = auto()  # Plus/Minus (+ -)
 
     def __init__(self, title="", parent=None):
         super().__init__(parent)
 
-        # Estilo visual nativo
+        # Native visual style
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
-        # Estados
+        # States
         self._is_expanded = False
         self._icon_position = QAccordionHeader.IconPosition.LeadingPosition
         self._icon_style = QAccordionHeader.IndicatorStyle.Arrow
@@ -36,29 +32,29 @@ class QAccordionHeader(QFrame):
         self._label_title = QLabel(title)
         self._label_title.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        # --- MUDANÇA: Usamos QToolButton em vez de QLabel ---
-        # Isso permite que o QAutoIcon gerencie a pintura dinâmica (cores)
+        # --- CHANGE: We use QToolButton instead of QLabel ---
+        # This allows QAutoIcon to manage dynamic painting (colors)
         self._btn_icon = QToolButton()
         self._btn_icon.setFixedSize(24, 24)
-        self._btn_icon.setIconSize(QSize(16, 16))  # Tamanho do desenho do ícone
-        self._btn_icon.setAutoRaise(True)  # Remove bordas de botão
+        self._btn_icon.setIconSize(QSize(16, 16))  # Icon drawing size
+        self._btn_icon.setAutoRaise(True)  # Remove button borders
 
-        # Importante: O botão deve ignorar o mouse para que o clique
-        # seja capturado pelo Header (QFrame) e não "roubado" pelo botão.
+        # Important: The button must ignore the mouse so that the click
+        # is captured by the Header (QFrame) and not "stolen" by the button.
         self._btn_icon.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
         # Layout
         self._layout_header = QHBoxLayout(self)
         self._layout_header.setContentsMargins(10, 5, 10, 5)
 
-        # Inicialização
+        # Initialization
         self.updateIcon()
         self.refreshLayout()
         self.setFlat(False)
 
     def setFlat(self, flat: bool):
         """
-        Define se o header parece um botão elevado (False) ou texto plano (True).
+        Defines whether the header looks like a raised button (False) or plain text (True).
         """
         if flat:
             self.setFrameStyle(QFrame.Shape.NoFrame)
@@ -83,13 +79,12 @@ class QAccordionHeader(QFrame):
         return self._is_expanded
 
     def setIconStyle(self, style: IndicatorStyle):
-        """Define o estilo do ícone: 'arrow' ou 'plus_minus'."""
         if style in [QAccordionHeader.IndicatorStyle.Arrow, QAccordionHeader.IndicatorStyle.PlusMinus]:
             self._icon_style = style
             self.updateIcon()
 
     def updateIcon(self):
-        """Atualiza o ícone usando QAutoIcon para garantir cores dinâmicas."""
+        """Updates the icon using QThemeResponsiveIcon to ensure dynamic colors."""
         icon_name = ""
 
         if self._icon_style == QAccordionHeader.IndicatorStyle.Arrow:
@@ -98,8 +93,6 @@ class QAccordionHeader(QFrame):
         elif self._icon_style == QAccordionHeader.IndicatorStyle.PlusMinus:
             icon_name = "fa6s.minus" if self._is_expanded else "fa6s.plus"
 
-        # --- AQUI ESTA A MAGICA ---
-        # Usamos o método estático que adicionamos ao QAutoIcon
         if icon_name:
             self._btn_icon.setIcon(QThemeResponsiveIcon.fromAwesome(icon_name))
 
@@ -129,7 +122,7 @@ class QAccordionHeader(QFrame):
         return self._label_title
 
     def iconWidget(self) -> QWidget:
-        # Renomeei de iconLabel para iconWidget pois agora é um botão
+        # Renamed from iconLabel because it is now a button
         return self._btn_icon
 
 

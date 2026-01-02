@@ -26,7 +26,7 @@ class QFilterableTable(QTableView):
 
         self.setModel(QStandardItemModel(self))
 
-    # --- API Pública ---
+    # --- Public API ---
 
     def setModel(self, model: QAbstractItemModel):
         if self._proxy.sourceModel():
@@ -42,7 +42,7 @@ class QFilterableTable(QTableView):
     def model(self) -> QAbstractItemModel:
         return self._proxy.sourceModel()
 
-    # --- Lógica de Popups ---
+    # --- Popup Logic ---
 
     def _refresh_popups(self):
         for popup in self._popups.values():
@@ -77,17 +77,17 @@ class QFilterableTable(QTableView):
 
         popup = self._popups[logical_index]
 
-        # 1. Calcula quais valores são válidos considerando os filtros das OUTRAS colunas
+        # 1. Calculates which values are valid considering filters from OTHER columns
         visible_values = self._get_unique_column_values(logical_index)
 
-        # 2. Sincroniza o Popup (Adiciona novos e REMOVE inválidos)
+        # 2. Synchronizes the Popup (Adds new and REMOVES invalid ones)
         current_data = popup.getData()
 
-        # Adiciona o que falta
+        # Adds what is missing
         for val in visible_values - current_data:
             popup.addData(val)
 
-        # Remove o que não deveria estar ali (para evitar inconsistência visual)
+        # Removes what shouldn't be there (to avoid visual inconsistency)
         for val in current_data - visible_values:
             popup.removeData(val)
 
@@ -103,11 +103,11 @@ class QFilterableTable(QTableView):
         if not popup:
             return
 
-        # Correção para evitar comportamento de "lock":
-        # Se o popup NÃO está filtrando (ou seja, todos os itens visíveis no popup estão marcados),
-        # removemos o filtro do proxy (passando None).
-        # Isso impede que itens ocultos por outras colunas fiquem travados fora da lista
-        # quando os outros filtros forem limpos.
+        # Fix to avoid "lock" behavior:
+        # If the popup is NOT filtering (i.e., all visible items in the popup are checked),
+        # we remove the filter from the proxy (passing None).
+        # This prevents items hidden by other columns from being locked out of the list
+        # when other filters are cleared.
         if popup.isFiltering():
             filter_data = popup.getSelectedData()
             self._proxy.setFilter(logical_index, filter_data)
@@ -129,32 +129,32 @@ class QFilterableTable(QTableView):
                 item = QStandardItem(str(logical_index))
                 model.setHorizontalHeaderItem(logical_index, item)
 
-            # O ícone reflete se há um filtro ATIVO no popup
+            # The icon reflects if there is an ACTIVE filter in the popup
             icon_name = "fa6s.filter" if popup.isFiltering() else "fa6s.angle-down"
             item.setIcon(QThemeResponsiveIcon.fromAwesome(icon_name))
 
-    # --- Lógica de Dados Inteligente ---
+    # --- Smart Data Logic ---
 
     def _get_unique_column_values(self, target_col: int, limit: int = 5000) -> Set[str]:
         """
-        Retorna valores únicos da coluna `target_col`,
-        CONSIDERANDO os filtros ativos em todas as OUTRAS colunas.
+        Returns unique values from column `target_col`,
+        CONSIDERING active filters in all OTHER columns.
         """
         model = self.model()
         values = set()
 
-        # 1. Captura o estado dos filtros das OUTRAS colunas
+        # 1. Captures filter state from OTHER columns
         active_filters: Dict[int, Set[str]] = {}
 
         for col_idx, popup in self._popups.items():
-            # Ignora a coluna atual para mostrar todas as opções DELA
+            # Ignores current column to show all its options
             if col_idx == target_col:
                 continue
 
             if popup.isFiltering():
                 active_filters[col_idx] = popup.getSelectedData()
 
-        # 2. Varre o modelo fonte verificando validade da linha
+        # 2. Scans source model checking row validity
         rows_to_scan = min(model.rowCount(), limit)
 
         for row in range(rows_to_scan):
@@ -177,7 +177,7 @@ class QFilterableTable(QTableView):
 
         return values
 
-    # --- Sinais do Modelo ---
+    # --- Model Signals ---
 
     def _connect_model_signals(self, model: QAbstractItemModel):
         model.columnsInserted.connect(self._on_columns_inserted)

@@ -10,60 +10,60 @@ from extra_qwidgets.icons import QThemeResponsiveIcon
 
 class QPager(QWidget):
     """
-    Componente de paginação.
-    - Janela deslizante de botões.
-    - Clique na página atual para digitar o número (edição in-place).
+    Pagination component.
+    - Sliding window of buttons.
+    - Click on current page to type the number (in-place editing).
     """
 
-    # Sinais públicos
+    # Public signals
     currentPageChanged = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # --- Variáveis de Dados ---
+        # --- Data Variables ---
         self._total_pages = 1
         self._current_page = 1
         self._max_visible_buttons = 5
 
-        # --- Configuração de UI e Layout ---
+        # --- UI and Layout Configuration ---
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(4)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Grupo para exclusividade visual
+        # Group for visual exclusivity
         self._button_group = QButtonGroup(self)
         self._button_group.setExclusive(True)
 
-        # Lista para rastrear widgets dinâmicos
+        # List to track dynamic widgets
         self._page_widgets = []
 
-        # 1. Botões de Navegação
+        # 1. Navigation Buttons
         self._btn_first = self._create_nav_button(QThemeResponsiveIcon.fromAwesome("fa6s.backward-step"))
         self._btn_prev = self._create_nav_button(QThemeResponsiveIcon.fromAwesome("fa6s.angle-left"))
         self._btn_next = self._create_nav_button(QThemeResponsiveIcon.fromAwesome("fa6s.angle-right"))
         self._btn_last = self._create_nav_button(QThemeResponsiveIcon.fromAwesome("fa6s.forward-step"))
 
-        # 2. Layout para os números (onde a mágica acontece)
+        # 2. Layout for numbers (where the magic happens)
         self._numbers_layout = QHBoxLayout()
         self._numbers_layout.setContentsMargins(0, 0, 0, 0)
         self._numbers_layout.setSpacing(2)
 
-        # 3. Adiciona ao layout principal
+        # 3. Add to main layout
         main_layout.addWidget(self._btn_first)
         main_layout.addWidget(self._btn_prev)
         main_layout.addLayout(self._numbers_layout)
         main_layout.addWidget(self._btn_next)
         main_layout.addWidget(self._btn_last)
 
-        # --- Conexões ---
+        # --- Connections ---
         self._setup_connections()
 
-        # Inicialização
+        # Initialization
         self._update_view()
 
-    # --- Métodos Internos de Criação ---
+    # --- Internal Creation Methods ---
 
     @staticmethod
     def _create_nav_button(icon: QIcon) -> QPushButton:
@@ -82,12 +82,12 @@ class QPager(QWidget):
         return btn
 
     def _create_editor(self) -> QSpinBox:
-        """Cria o input numérico que substitui o botão."""
+        """Creates the numeric input that replaces the button."""
         spin = QSpinBox()
-        spin.setFixedSize(60, 30)  # Um pouco mais largo para caber números grandes
-        spin.setFrame(False)  # Sem borda para parecer integrado
+        spin.setFixedSize(60, 30)  # Slightly wider to fit large numbers
+        spin.setFrame(False)  # No border to look integrated
         spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        spin.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)  # Remove setinhas cima/baixo
+        spin.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)  # Remove up/down arrows
         spin.setRange(1, self._total_pages)
         spin.setValue(self._current_page)
         return spin
@@ -98,12 +98,12 @@ class QPager(QWidget):
         self._btn_next.clicked.connect(lambda: self.setCurrentPage(self._current_page + 1))
         self._btn_last.clicked.connect(lambda: self.setCurrentPage(self._total_pages))
 
-    # --- Lógica de Visualização e Edição ---
+    # --- Visualization and Editing Logic ---
 
     def _update_view(self):
-        """Reconstroi a barra de números."""
+        """Rebuilds the number bar."""
 
-        # 1. Calcular Janela Deslizante
+        # 1. Calculate Sliding Window
         half = self._max_visible_buttons // 2
         start_page = max(1, self._current_page - half)
         end_page = min(self._total_pages, start_page + self._max_visible_buttons - 1)
@@ -111,7 +111,7 @@ class QPager(QWidget):
         if end_page - start_page + 1 < self._max_visible_buttons:
             start_page = max(1, end_page - self._max_visible_buttons + 1)
 
-        # 2. Limpeza Total da área numérica
+        # 2. Total Cleanup of numeric area
         while self._numbers_layout.count():
             item = self._numbers_layout.takeAt(0)
             widget = item.widget()
@@ -121,24 +121,24 @@ class QPager(QWidget):
                 widget.deleteLater()
         self._page_widgets.clear()
 
-        # 3. Construção dos Botões
+        # 3. Button Construction
         for page_num in range(start_page, end_page + 1):
             btn = self._create_page_button(str(page_num))
             self._button_group.addButton(btn)
 
             if page_num == self._current_page:
                 btn.setChecked(True)
-                # O botão atual não apenas navega, ele abre a edição
-                btn.setToolTip("Clique para digitar a página")
+                # The current button not only navigates, it opens editing
+                btn.setToolTip(self.tr("Click to type page"))
                 btn.clicked.connect(partial(self.__on_edit_requested, btn))
             else:
-                # Botões normais apenas navegam
+                # Normal buttons just navigate
                 btn.clicked.connect(partial(self.setCurrentPage, page_num))
 
             self._numbers_layout.addWidget(btn)
             self._page_widgets.append(btn)
 
-        # 4. Estados de Navegação
+        # 4. Navigation States
         self._btn_first.setEnabled(self._current_page > 1)
         self._btn_prev.setEnabled(self._current_page > 1)
         self._btn_next.setEnabled(self._current_page < self._total_pages)
@@ -146,34 +146,34 @@ class QPager(QWidget):
 
     def __on_edit_requested(self, button_sender: QPushButton):
         """
-        Slot chamado quando o usuário clica na página atual.
-        Substitui o botão por um SpinBox.
+        Slot called when the user clicks on the current page.
+        Replaces the button with a SpinBox.
         """
-        # 1. Identificar posição no layout
+        # 1. Identify position in layout
         index = self._numbers_layout.indexOf(button_sender)
         if index == -1: return
 
-        # 2. Criar e configurar o editor
+        # 2. Create and configure editor
         spin = self._create_editor()
 
-        # 3. Substituir no layout (Swap)
-        # Removemos o botão do layout e escondemos (não deletamos ainda para evitar crash em slots ativos)
+        # 3. Replace in layout (Swap)
+        # We remove the button from the layout and hide it (don't delete yet to avoid crash in active slots)
         item = self._numbers_layout.takeAt(index)
         button_sender.hide()
-        self._button_group.removeButton(button_sender)  # Importante para não bugar o grupo
+        self._button_group.removeButton(button_sender)  # Important not to bug the group
 
         self._numbers_layout.insertWidget(index, spin)
         spin.setFocus()
         spin.selectAll()
 
-        # 4. Conexões do Editor
-        # Se apertar Enter ou perder o foco, confirma a edição
+        # 4. Editor Connections
+        # If Enter is pressed or focus is lost, confirms editing
         spin.editingFinished.connect(lambda: self.setCurrentPage(spin.value()))
 
-        # Se perder o foco sem apertar enter, forçamos o update para restaurar o botão
-        # (Isso é feito implicitamente pois setCurrentPage chama _update_view)
+        # If focus is lost without pressing enter, we force update to restore the button
+        # (This is done implicitly because setCurrentPage calls _update_view)
 
-    # --- API Pública ---
+    # --- Public API ---
 
     def setTotalPages(self, total: int):
         if total < 1: total = 1
@@ -198,12 +198,12 @@ class QPager(QWidget):
         if page < 1: page = 1
         if page > self._total_pages: page = self._total_pages
 
-        # Atualiza o estado
+        # Updates state
         self._current_page = page
 
-        # Emite sinal apenas se mudou
-        # Mas SEMPRE chama _update_view para garantir que o SpinBox
-        # (se existir) seja destruído e o botão volte.
+        # Emits signal only if changed
+        # But ALWAYS calls _update_view to ensure SpinBox
+        # (if it exists) is destroyed and the button returns.
         self._update_view()
         self.currentPageChanged.emit(page)
 

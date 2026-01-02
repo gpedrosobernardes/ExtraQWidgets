@@ -13,7 +13,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Emoji Picker Example")
+        self.setWindowTitle("QEmojiPicker Demo")
         self.setWindowIcon(QThemeResponsiveIcon.fromAwesome("fa6b.python"))
 
         widget = QWidget()

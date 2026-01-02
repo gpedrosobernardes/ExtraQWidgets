@@ -9,8 +9,9 @@ from extra_qwidgets.widgets.color_button import QColorButton
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.resize(300, 200)
 
-        self.setWindowTitle("Color Button Example")
+        self.setWindowTitle("QColorButton Demo")
         self.setWindowIcon(QThemeResponsiveIcon.fromAwesome("fa6b.python"))
 
         widget = QWidget()

@@ -37,7 +37,7 @@ class EmojiCategory:
     def _create_shortcut_button(text: str, icon: QIcon) -> QToolButton:
         btn = QToolButton()
         btn.setCheckable(True)
-        btn.setAutoRaise(True)  # Visual flat/limpo
+        btn.setAutoRaise(True)  # Visual flat/clean
         btn.setFixedSize(32, 32)
         btn.setIconSize(QSize(22, 22))
         btn.setToolTip(text)

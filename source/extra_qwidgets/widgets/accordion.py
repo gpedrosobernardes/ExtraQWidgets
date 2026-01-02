@@ -56,12 +56,12 @@ class QAccordion(QWidget):
         self.items.remove(item)
 
     def setIconPosition(self, position):
-        """Muda a posição do ícone (left/right) de TODOS os itens."""
+        """Changes the icon position (left/right) of ALL items."""
         for item in self.items:
             item.setIconPosition(position)
 
     def setIconStyle(self, style):
-        """Muda o estilo do ícone (arrow/plus_minus) de TODOS os itens."""
+        """Changes the icon style (arrow/plus_minus) of ALL items."""
         for item in self.items:
             item.setIconStyle(style)
 
@@ -78,11 +78,11 @@ class QAccordion(QWidget):
             item.setExpanded(False)
 
     def scrollToItem(self, target_item: QAccordionItem):
-        # 1. Pega a coordenada Y do widget alvo relativa ao conteúdo do ScrollArea
-        # (Assumindo que target_widget é filho direto do widget de conteúdo)
+        # 1. Gets the Y coordinate of the target widget relative to the ScrollArea content
+        # (Assuming target_widget is a direct child of the content widget)
         y_pos = target_item.y()
 
-        # 2. Define o valor da barra de rolagem vertical
+        # 2. Sets the vertical scroll bar value
         self.scroll.verticalScrollBar().setValue(y_pos)
 
     def resetScroll(self):

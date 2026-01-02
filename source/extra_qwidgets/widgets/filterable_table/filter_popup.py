@@ -70,10 +70,10 @@ class QFilterPopup(QDialog):
         tool_button = QToolButton()
         tool_button.setText(text)
         tool_button.setAutoRaise(True)
-        # TextBesideIcon é bom, mas certifique-se que o ícone existe
+        # TextBesideIcon is good, but make sure the icon exists
         tool_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        # Preferred é melhor que Expanding para botões de ferramenta,
-        # para não ficarem gigantes horizontalmente sem necessidade.
+        # Preferred is better than Expanding for tool buttons,
+        # so they don't get huge horizontally unnecessarily.
         tool_button.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         tool_button.setCursor(Qt.CursorShape.PointingHandCursor)
         return tool_button
@@ -83,7 +83,7 @@ class QFilterPopup(QDialog):
         self.proxy_model = QSortFilterProxyModel()
         self.proxy_model.setSourceModel(self.model)
 
-        # Filtros e Ordenação
+        # Filters and Sorting
         self.proxy_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.proxy_model.setFilterRole(Qt.ItemDataRole.DisplayRole)
         self.proxy_model.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -113,7 +113,7 @@ class QFilterPopup(QDialog):
         is_checked = state == Qt.CheckState.Checked
 
         self.model.blockSignals(True)
-        # Ao clicar em "Select All", afetamos apenas o que está VISÍVEL na busca
+        # When clicking "Select All", we only affect what is VISIBLE in the search
         rowCount = self.proxy_model.rowCount()
         for row in range(rowCount):
             proxy_idx = self.proxy_model.index(row, 0)
@@ -153,12 +153,12 @@ class QFilterPopup(QDialog):
             item = self.model.item(row, 0)
             item.setCheckState(state)
 
-    # --- API de Dados ---
+    # --- Data API ---
 
     def getSelectedData(self) -> Set[str]:
         """
-        Retorna TODOS os itens marcados no modelo original,
-        independente se estão filtrados pela busca do popup ou não.
+        Returns ALL checked items in the original model,
+        regardless of whether they are filtered by the popup search or not.
         """
         data = set()
         for row in range(self.model.rowCount()):
@@ -168,7 +168,7 @@ class QFilterPopup(QDialog):
         return data
 
     def getData(self) -> Set[str]:
-        """Retorna todos os dados contidos no popup."""
+        """Returns all data contained in the popup."""
         return {self.model.item(row, 0).text() for row in range(self.model.rowCount())}
 
     def addData(self, data: str):
@@ -179,14 +179,14 @@ class QFilterPopup(QDialog):
             self.model.appendRow(item)
 
     def removeData(self, data: str):
-        """Remove o item do popup (usado quando ele não é mais válido no contexto)."""
+        """Removes the item from the popup (used when it is no longer valid in the context)."""
         items = self.model.findItems(data)
         for item in items:
             self.model.removeRow(item.row())
 
     def isFiltering(self) -> bool:
         """
-        Retorna True se existe algum item desmarcado.
+        Returns True if there is any unchecked item.
         """
         for row in range(self.model.rowCount()):
             if self.model.item(row, 0).checkState() == Qt.CheckState.Unchecked:
