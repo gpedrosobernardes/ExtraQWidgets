@@ -52,7 +52,7 @@ class QExtraTextEdit(QTextEdit):
     def createMimeDataFromSelection(self) -> QMimeData:
         """Preserves custom emojis when copying/dragging."""
         document: QTwemojiTextDocument = self.document()
-        custom_text = document.toText(self.textCursor())
+        custom_text = document.toPlainText(self.textCursor())
 
         new_mime_data = QMimeData()
         new_mime_data.setText(custom_text)

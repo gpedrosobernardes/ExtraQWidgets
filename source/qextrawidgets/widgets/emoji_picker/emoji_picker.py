@@ -15,6 +15,7 @@ from qextrawidgets.widgets.accordion_item import QAccordionItem
 from qextrawidgets.widgets.emoji_picker.emoji_category import EmojiCategory
 from qextrawidgets.widgets.emoji_picker.emoji_grid import QEmojiGrid
 from qextrawidgets.emoji_utils import EmojiImageProvider
+from qextrawidgets.widgets.search_line_edit import QSearchLineEdit
 
 
 class QEmojiPicker(QWidget):
@@ -228,14 +229,11 @@ class QEmojiPicker(QWidget):
     def _create_search_line_edit() -> QLineEdit:
         font = QFont()
         font.setPointSize(12)
-        line_edit = QLineEdit()
+        line_edit = QSearchLineEdit()
         line_edit.setFont(font)
         line_edit.setPlaceholderText(
             QCoreApplication.translate("QEmojiPicker", "Search emoji...")
         )
-        line_edit.setClearButtonEnabled(True)
-        # Search icon using qtawesome
-        line_edit.addAction(QThemeResponsiveIcon.fromAwesome("fa6s.magnifying-glass"), QLineEdit.ActionPosition.LeadingPosition)
         return line_edit
 
     # --- Public API (camelCase) ---

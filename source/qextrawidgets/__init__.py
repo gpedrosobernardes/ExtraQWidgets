@@ -1,13 +1,14 @@
 from .widgets import (
     QPager,
-    QPassword,
+    QPasswordLineEdit,
     QAccordion,
     QDualList,
     QColorButton,
     QAccordionItem,
     QExtraTextEdit,
     QEmojiPicker,
-    QFilterableTable
+    QFilterableTable,
+    QSearchLineEdit
 )
 from .documents import QTwemojiTextDocument
 from .proxys import QMultiFilterProxy, EmojiSortFilterProxyModel

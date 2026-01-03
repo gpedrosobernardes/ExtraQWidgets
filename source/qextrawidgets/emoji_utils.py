@@ -1,6 +1,8 @@
-from PySide6.QtCore import QRegularExpression, QSize
+import typing
+
+from PySide6.QtCore import QRegularExpression, QSize, QRegularExpressionMatch
 from PySide6.QtGui import QPixmap, QPixmapCache, QImageReader, Qt
-from emojis.db import Emoji
+from emojis.db import Emoji, get_emoji_by_alias, get_emoji_by_code
 from twemoji_api.api import get_emoji_path
 
 
@@ -19,6 +21,10 @@ class EmojiFinder:
         R"(?:\p{Extended_Pictographic}\x{FE0F}?(?:[\x{1F3FB}-\x{1F3FF}])?(?:\x{200D}\p{Extended_Pictographic}\x{FE0F}?(?:[\x{1F3FB}-\x{1F3FF}])?)*)"
     )
 
+    _ALIAS_PATTERN = R"(:\w+:)"
+
+    _COLOR_PATTERN = R"[\x{1F3FB}-\x{1F3FF}]"
+
     @classmethod
     def get_emoji_pattern(cls) -> str:
         """Returns the raw regex pattern string for a single emoji."""
@@ -33,17 +39,62 @@ class EmojiFinder:
         )
 
     @classmethod
-    def find_all(cls, text: str):
+    def find_all_emoji(cls, text: str) -> typing.Generator[QRegularExpressionMatch, None, None]:
         """
         Finds all emojis in the given text.
-        Returns a list of QRegularExpressionMatch objects.
+        Returns a generator of QRegularExpressionMatch objects.
         """
         regex = cls.get_regex()
         iterator = regex.globalMatch(text)
-        matches = []
         while iterator.hasNext():
-            matches.append(iterator.next())
-        return matches
+            yield iterator.next()
+
+    @classmethod
+    def find_all_emoji_objects(cls, text: str, ignore_colors: bool = False) -> typing.Generator[typing.Tuple[Emoji, QRegularExpressionMatch], None, None]:
+        """
+        Finds all emojis in the given text.
+        Returns a generator of Emoji objects.
+        """
+        for match in cls.find_all_emoji(text):
+            emoji_str = match.captured(0)
+            if ignore_colors:
+                for color_match in cls.find_emoji_colors(emoji_str):
+                    emoji_str = emoji_str.replace(color_match.captured(0), "")
+            emoji = get_emoji_by_code(emoji_str)
+            if emoji:
+                yield emoji, match
+
+
+    @classmethod
+    def find_all_aliases(cls, text: str) -> typing.Generator[QRegularExpressionMatch, None, None]:
+        """
+        Finds all aliases in the given text.
+        Returns a generator of QRegularExpressionMatch objects.
+        """
+        regex = QRegularExpression(cls._ALIAS_PATTERN)
+        iterator = regex.globalMatch(text)
+        while iterator.hasNext():
+            yield iterator.next()
+
+    @classmethod
+    def find_all_emoji_aliases(cls, text: str) -> typing.Generator[typing.Tuple[Emoji, QRegularExpressionMatch], None, None]:
+        """
+        Finds all aliases in the given text.
+        Returns a generator of QRegularExpressionMatch objects.
+        """
+        for match in cls.find_all_aliases(text):
+            first_captured = match.captured(0)
+            alias = first_captured[1:-1]
+            emoji = get_emoji_by_alias(alias)
+            if emoji:
+                yield emoji, match
+
+    @classmethod
+    def find_emoji_colors(cls, text: str) -> typing.Generator[QRegularExpressionMatch, None, None]:
+        re_color = QRegularExpression(cls._COLOR_PATTERN)
+        iterator = re_color.globalMatch(text)
+        while iterator.hasNext():
+            yield iterator.next()
 
 
 class EmojiImageProvider:
@@ -68,7 +119,7 @@ class EmojiImageProvider:
 
         # 2. Generate unique key for Cache
         emoji_alias = emoji_data[0][0]
-        cache_key = f"emoji_{emoji_alias}"
+        cache_key = f"emoji_{emoji_alias}-{target_width}x{target_height}"
 
         # 3. Try to fetch from Cache
         pixmap = QPixmap()

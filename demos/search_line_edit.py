@@ -3,17 +3,17 @@ import sys
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QWidget
 
 from qextrawidgets.icons import QThemeResponsiveIcon
-from qextrawidgets.widgets.password import QPassword
+from qextrawidgets import QSearchLineEdit
 
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("QPassword Demo")
+        self.setWindowTitle("QSearchLineEdit Demo")
         self.setWindowIcon(QThemeResponsiveIcon.fromAwesome("fa6b.python"))
 
-        widget = QPassword()
+        widget = QSearchLineEdit()
 
         layout = QHBoxLayout()
 

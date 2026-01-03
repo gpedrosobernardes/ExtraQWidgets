@@ -31,6 +31,7 @@ class DemoTextEditWindow(QMainWindow):
         self._chk_aliases = None
         self._spin_max_height = None
         self._spin_emoji_margin = None
+        self._spin_font_size = None
         self._lbl_status = None
 
         self._setup_ui()
@@ -86,11 +87,18 @@ class DemoTextEditWindow(QMainWindow):
         self._spin_emoji_margin.setValue(self._text_edit.document().emojiMargin())
         self._spin_emoji_margin.setSuffix(" px")
 
+        # Control: Font Size
+        self._spin_font_size = QSpinBox()
+        self._spin_font_size.setRange(8, 72)
+        self._spin_font_size.setValue(int(self._text_edit.font().pointSize()))
+        self._spin_font_size.setSuffix(" pt")
+
         layout_controls.addRow(self._chk_responsive)
         layout_controls.addRow("Maximum Height:", self._spin_max_height)
         layout_controls.addRow(self._chk_twemoji)
         layout_controls.addRow(self._chk_aliases)
         layout_controls.addRow("Emoji Margin:", self._spin_emoji_margin)
+        layout_controls.addRow("Font Size:", self._spin_font_size)
 
         self._main_layout.addWidget(group_controls)
 
@@ -113,6 +121,15 @@ class DemoTextEditWindow(QMainWindow):
         self._chk_twemoji.toggled.connect(doc.setTwemoji)
         self._chk_aliases.toggled.connect(doc.setAliasReplacement)
         self._spin_emoji_margin.valueChanged.connect(doc.setEmojiMargin)
+
+        # Connect font size change
+        self._spin_font_size.valueChanged.connect(self._change_font_size)
+
+    def _change_font_size(self, size):
+        document = self._text_edit.document()
+        font = document.defaultFont()
+        font.setPointSize(size)
+        document.setDefaultFont(font)
 
     def _print_debug_info(self):
         print("-" * 40)

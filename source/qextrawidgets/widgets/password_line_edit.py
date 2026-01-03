@@ -4,9 +4,9 @@ from PySide6.QtWidgets import QLineEdit
 from qextrawidgets.icons import QThemeResponsiveIcon
 
 
-class QPassword(QLineEdit):
+class QPasswordLineEdit(QLineEdit):
     def __init__(self, parent=None):
-        super(QPassword, self).__init__(parent)
+        super(QPasswordLineEdit, self).__init__(parent)
         self._action = QAction("&Hide/show", self)
         self._action.setCheckable(True)
         self._action.toggled.connect(self.setPasswordHidden)
