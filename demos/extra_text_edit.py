@@ -30,6 +30,7 @@ class DemoTextEditWindow(QMainWindow):
         self._chk_twemoji = None
         self._chk_aliases = None
         self._spin_max_height = None
+        self._spin_emoji_margin = None
         self._lbl_status = None
 
         self._setup_ui()
@@ -79,10 +80,17 @@ class DemoTextEditWindow(QMainWindow):
         self._chk_aliases = QCheckBox("Replace Aliases (e.g., :smile:)")
         self._chk_aliases.setChecked(self._text_edit.document().aliasReplacement())
 
+        # Control: Emoji Margin
+        self._spin_emoji_margin = QSpinBox()
+        self._spin_emoji_margin.setRange(0, 50)
+        self._spin_emoji_margin.setValue(self._text_edit.document().emojiMargin())
+        self._spin_emoji_margin.setSuffix(" px")
+
         layout_controls.addRow(self._chk_responsive)
         layout_controls.addRow("Maximum Height:", self._spin_max_height)
         layout_controls.addRow(self._chk_twemoji)
         layout_controls.addRow(self._chk_aliases)
+        layout_controls.addRow("Emoji Margin:", self._spin_emoji_margin)
 
         self._main_layout.addWidget(group_controls)
 
@@ -104,6 +112,7 @@ class DemoTextEditWindow(QMainWindow):
         doc = self._text_edit.document()
         self._chk_twemoji.toggled.connect(doc.setTwemoji)
         self._chk_aliases.toggled.connect(doc.setAliasReplacement)
+        self._spin_emoji_margin.valueChanged.connect(doc.setEmojiMargin)
 
     def _print_debug_info(self):
         print("-" * 40)
