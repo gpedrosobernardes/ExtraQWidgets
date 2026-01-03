@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 
 from qextrawidgets.icons import QThemeResponsiveIcon
 from qextrawidgets.widgets.accordion_item import QAccordionHeader
-from source.qextrawidgets.widgets.accordion import QAccordion
+from qextrawidgets.widgets.accordion import QAccordion
 
 
 class MainWindow(QMainWindow):
