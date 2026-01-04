@@ -1,7 +1,7 @@
 import typing
 
 import qtawesome
-from PySide6.QtCore import QRect, Qt, QSize, QPoint
+from PySide6.QtCore import QRect, Qt, QSize
 from PySide6.QtGui import QIcon, QIconEngine, QPainter, QPixmap, QPalette, QColor
 from PySide6.QtWidgets import QApplication
 
@@ -37,7 +37,7 @@ class ThemeResponsiveIconEngine(QIconEngine):
 
         # 2. Get Colored Pixmap
         # We request the pixmap based on this bounding size
-        pixmap = self._getColoredPixmap(bounding_size, mode, state)
+        pixmap = self._get_colored_pixmap(bounding_size, mode, state)
 
         if pixmap.isNull():
             return
@@ -66,15 +66,15 @@ class ThemeResponsiveIconEngine(QIconEngine):
 
     def pixmap(self, size: QSize, mode: QIcon.Mode, state: QIcon.State) -> QPixmap:
         """Returns processed pixmap."""
-        return self._getColoredPixmap(size, mode, state)
+        return self._get_colored_pixmap(size, mode, state)
 
     def addPixmap(self, pixmap: QPixmap, mode: QIcon.Mode, state: QIcon.State):
         self._source_icon.addPixmap(pixmap, mode, state)
-        self._clearCache()
+        self._clear_cache()
 
-    def addFile(self, fileName: str, size: QSize, mode: QIcon.Mode, state: QIcon.State):
-        self._source_icon.addFile(fileName, size, mode, state)
-        self._clearCache()
+    def addFile(self, file_name: str, size: QSize, mode: QIcon.Mode, state: QIcon.State):
+        self._source_icon.addFile(file_name, size, mode, state)
+        self._clear_cache()
 
     def availableSizes(self, mode: QIcon.Mode = QIcon.Mode.Normal, state: QIcon.State = QIcon.State.Off) -> typing.List[QSize]:
         return self._source_icon.availableSizes(mode, state)
@@ -87,7 +87,7 @@ class ThemeResponsiveIconEngine(QIconEngine):
 
     # --- Internal Logic ---
 
-    def _getColoredPixmap(self, size: QSize, mode: QIcon.Mode, state: QIcon.State) -> QPixmap:
+    def _get_colored_pixmap(self, size: QSize, mode: QIcon.Mode, state: QIcon.State) -> QPixmap:
         # 1. Theme Color
         palette = QApplication.palette()
         if mode == QIcon.Mode.Disabled:
@@ -108,7 +108,7 @@ class ThemeResponsiveIconEngine(QIconEngine):
             return QPixmap()
 
         # 4. Colorize
-        colored_pixmap = self._generateColoredPixmap(base_pixmap, target_color)
+        colored_pixmap = self._generate_colored_pixmap(base_pixmap, target_color)
 
         # Update Cache
         self._cached_pixmap = colored_pixmap
@@ -116,7 +116,8 @@ class ThemeResponsiveIconEngine(QIconEngine):
 
         return colored_pixmap
 
-    def _generateColoredPixmap(self, base: QPixmap, color: QColor) -> QPixmap:
+    @staticmethod
+    def _generate_colored_pixmap(base: QPixmap, color: QColor) -> QPixmap:
         colored = QPixmap(base.size())
         colored.fill(Qt.GlobalColor.transparent)
 
@@ -134,7 +135,7 @@ class ThemeResponsiveIconEngine(QIconEngine):
 
         return colored
 
-    def _clearCache(self):
+    def _clear_cache(self):
         self._cached_pixmap = None
         self._cache_key = None
 
@@ -144,7 +145,7 @@ class QThemeResponsiveIcon(QIcon):
     QIcon wrapper that applies automatic coloring based on system theme.
     The icon adjusts to the smallest available space maintaining aspect ratio.
     """
-    def __init__(self, source: typing.Union[str, QPixmap, QIcon], size: int = 64):
+    def __init__(self, source: typing.Union[str, QPixmap, QIcon]):
         icon = QIcon()
 
         if isinstance(source, QIcon):
@@ -158,5 +159,5 @@ class QThemeResponsiveIcon(QIcon):
         super().__init__(ThemeResponsiveIconEngine(icon))
 
     @staticmethod
-    def fromAwesome(icon_name: str, size: int = 64, **kwargs):
-        return QThemeResponsiveIcon(qtawesome.icon(icon_name, **kwargs), size)
+    def fromAwesome(icon_name: str, **kwargs):
+        return QThemeResponsiveIcon(qtawesome.icon(icon_name, **kwargs))
