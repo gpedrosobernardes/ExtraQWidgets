@@ -186,9 +186,10 @@ class QEmojiPicker(QWidget):
         alias = emoji[0][0]
         clipboard.setText(f":{alias}:")
 
-    def __on_mouse_enter_emoji(self, emoji: Emoji, item):
+    def __on_mouse_enter_emoji(self, emoji: Emoji, _):
         pixmap = EmojiImageProvider.getPixmap(
             emoji,
+            0,
             self.__emoji_label.size(),
             self.devicePixelRatio()
         )

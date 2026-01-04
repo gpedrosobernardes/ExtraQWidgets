@@ -1,7 +1,7 @@
 import typing
 
-from PySide6.QtCore import QRegularExpression, QSize, QRegularExpressionMatch
-from PySide6.QtGui import QPixmap, QPixmapCache, QImageReader, Qt
+from PySide6.QtCore import QRegularExpression, QSize, QRegularExpressionMatch, QUrl, QUrlQuery
+from PySide6.QtGui import QPixmap, QPixmapCache, QImageReader, Qt, QPainter
 from emojis.db import Emoji, get_emoji_by_alias, get_emoji_by_code
 from twemoji_api.api import get_emoji_path
 
@@ -104,13 +104,14 @@ class EmojiImageProvider:
     """
 
     @staticmethod
-    def getPixmap(emoji_data: Emoji, size: QSize, dpr: float = 1.0) -> QPixmap:
+    def getPixmap(emoji_data: Emoji, margin: int, size: QSize, dpr: float = 1.0) -> QPixmap:
         """
         Returns a QPixmap ready to be drawn.
 
         :param emoji_data: Object containing the emoji path or code.
         :param size: Desired QSize (logical size).
         :param dpr: Device Pixel Ratio (for Retina/4K screens).
+        :param margin:
         """
 
         # 1. Calculate real physical size (pixels)
@@ -119,11 +120,11 @@ class EmojiImageProvider:
 
         # 2. Generate unique key for Cache
         emoji_alias = emoji_data[0][0]
-        cache_key = f"emoji_{emoji_alias}-{target_width}x{target_height}"
+        cache_url = EmojiImageProvider.getUrl(emoji_alias, margin, size, dpr)
 
         # 3. Try to fetch from Cache
         pixmap = QPixmap()
-        if QPixmapCache.find(cache_key, pixmap):
+        if QPixmapCache.find(cache_url.toString(), pixmap):
             return pixmap
 
         # --- CACHE MISS (Load from disk) ---
@@ -141,8 +142,21 @@ class EmojiImageProvider:
                 pixmap = QPixmap.fromImage(image)
                 pixmap.setDevicePixelRatio(dpr)
 
+                # Apply margin
+                if margin > 0:
+                    height = int((size.height() + (margin * 2)) * dpr)
+                    width = int((size.width() + (margin * 2)) * dpr)
+                    final_pixmap = QPixmap(width, height)
+                    final_pixmap.setDevicePixelRatio(dpr)
+                    final_pixmap.fill(Qt.GlobalColor.transparent)
+
+                    painter = QPainter(final_pixmap)
+                    painter.drawPixmap(margin, margin, pixmap)
+                    painter.end()
+                    pixmap = final_pixmap
+
                 # Save to cache for future
-                QPixmapCache.insert(cache_key, pixmap)
+                QPixmapCache.insert(cache_url.toString(), pixmap)
                 return pixmap
 
         # 5. Fallback (Returns a transparent pixmap or placeholder in case of error)
@@ -150,3 +164,19 @@ class EmojiImageProvider:
         fallback.fill(Qt.GlobalColor.transparent)
         fallback.setDevicePixelRatio(dpr)
         return fallback
+
+    @staticmethod
+    def getUrl(alias: str, margin: int, size: QSize, dpr: float) -> QUrl:
+        url = QUrl()
+        url.setScheme("twemoji")
+        url.setPath(alias)
+
+        query_params = QUrlQuery()
+        query_params.addQueryItem("margin", str(margin))
+        query_params.addQueryItem("width", str(size.width()))
+        query_params.addQueryItem("height", str(size.height()))
+        query_params.addQueryItem("dpr", str(dpr))
+
+        url.setQuery(query_params)
+
+        return url

@@ -1,9 +1,8 @@
 import typing
-from urllib.parse import urlparse, urlencode, urlunparse
 
-from PySide6.QtCore import QSignalBlocker, QSize, Qt, QRegularExpressionMatch
+from PySide6.QtCore import QSignalBlocker, QSize, QRegularExpressionMatch, QUrl
 from PySide6.QtGui import (QTextDocument, QTextCursor, QTextImageFormat,
-                           QTextCharFormat, QFontMetrics, QTextFragment, QGuiApplication, QPixmap, QPainter, QTextBlock,
+                           QTextCharFormat, QFontMetrics, QTextFragment, QTextBlock,
                            QFont)
 from emojis.db import Emoji, get_emoji_by_alias
 
@@ -119,39 +118,19 @@ class QTwemojiTextDocument(QTextDocument):
         if not emoji:
             return
 
-        url = self._encode_url(emoji.aliases[0], margin, size)
+        size_obj = QSize(size, size)
+
+        dpr = self.parent().devicePixelRatio()
+
+        url = EmojiImageProvider.getUrl(emoji.aliases[0], margin, size_obj, dpr)
 
         if self.resource(QTextDocument.ResourceType.ImageResource, url):
             return
 
-        dpr = QGuiApplication.primaryScreen().devicePixelRatio()
-
-        pixmap = EmojiImageProvider.getPixmap(
-            emoji_data=emoji,
-            size=QSize(size, size),
-            dpr=dpr
-        )
-
-        if margin > 0:
-            total_size = size + (margin * 2)
-            final_pixmap = QPixmap(int(total_size * dpr), int(total_size * dpr))
-            final_pixmap.setDevicePixelRatio(dpr)
-            final_pixmap.fill(Qt.GlobalColor.transparent)
-
-            painter = QPainter(final_pixmap)
-            painter.drawPixmap(margin, margin, pixmap)
-            painter.end()
-            pixmap = final_pixmap
+        pixmap = EmojiImageProvider.getPixmap(emoji, margin, size_obj, dpr)
 
         if not pixmap.isNull():
             self.addResource(QTextDocument.ResourceType.ImageResource, url, pixmap)
-
-    @staticmethod
-    def _encode_url(alias, margin=1, size=72, dpr=1.0) -> str:
-        params = dict(margin=margin, size=size, dpr=dpr)
-        query_string = urlencode(params)
-        components = ('twemoji', alias, '', '', query_string, '')
-        return str(urlunparse(components))
 
     def _calculate_emoji_size(self, cursor: QTextCursor) -> int:
         """Calculates the emoji size based on configuration or font."""
@@ -292,7 +271,7 @@ class QTwemojiTextDocument(QTextDocument):
     def _is_emoji_frag(frag):
         if frag.charFormat().isImageFormat():
             img_fmt = frag.charFormat().toImageFormat()
-            if img_fmt.name().startswith("twemoji://"):
+            if img_fmt.name().startswith("twemoji:"):
                 return True
         return False
 
@@ -318,11 +297,13 @@ class QTwemojiTextDocument(QTextDocument):
     def _emoji_to_text_image(self, emoji: Emoji) -> QTextImageFormat:
         cursor = QTextCursor(self)
         emoji_size = self._calculate_emoji_size(cursor)
+        size = QSize(emoji_size, emoji_size)
         self._ensure_resource_loaded(emoji, emoji_size, self._emoji_margin)
         image = QTextImageFormat()
         if emoji and emoji.aliases:
-            name = self._encode_url(emoji.aliases[0], self._emoji_margin, emoji_size)
-            image.setName(name)
+            dpr = self.parent().devicePixelRatio()
+            url = EmojiImageProvider.getUrl(emoji.aliases[0], self._emoji_margin, size, dpr)
+            image.setName(url.toString())
             image.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignMiddle)
             total_size = emoji_size + (self._emoji_margin * 2)
             image.setHeight(total_size)
@@ -332,8 +313,8 @@ class QTwemojiTextDocument(QTextDocument):
 
     @staticmethod
     def _text_image_to_emoji(image: QTextImageFormat) -> typing.Optional[Emoji]:
-        uri = urlparse(image.name())
-        return get_emoji_by_alias(uri.netloc)
+        url = QUrl(image.name())
+        return get_emoji_by_alias(url.path())
 
     @staticmethod
     def _is_fragment_selected(cursor: QTextCursor, fragment: QTextFragment) -> bool:
