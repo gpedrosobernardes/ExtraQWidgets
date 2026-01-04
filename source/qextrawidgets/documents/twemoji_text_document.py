@@ -1,13 +1,15 @@
 import typing
-
-from PySide6.QtCore import QUrl, QSignalBlocker, QRegularExpression, QSize, Qt, QRegularExpressionMatch
-from PySide6.QtGui import (QTextDocument, QTextCursor, QTextImageFormat,
-                           QTextCharFormat, QFontMetrics, QTextFragment, QGuiApplication, QPixmap, QPainter)
-from emojis.db import Emoji, get_emoji_by_alias, get_emoji_by_code
 from urllib.parse import urlparse, urlencode, urlunparse
+
+from PySide6.QtCore import QSignalBlocker, QSize, Qt, QRegularExpressionMatch
+from PySide6.QtGui import (QTextDocument, QTextCursor, QTextImageFormat,
+                           QTextCharFormat, QFontMetrics, QTextFragment, QGuiApplication, QPixmap, QPainter, QTextBlock,
+                           QFont)
+from emojis.db import Emoji, get_emoji_by_alias
 
 from qextrawidgets.emoji_utils import EmojiFinder, EmojiImageProvider
 
+T = typing.TypeVar('T')
 
 class QTwemojiTextDocument(QTextDocument):
 
@@ -145,11 +147,11 @@ class QTwemojiTextDocument(QTextDocument):
             self.addResource(QTextDocument.ResourceType.ImageResource, url, pixmap)
 
     @staticmethod
-    def _encode_url(alias, margin=1, size=72, dpr=1.0) -> QUrl:
+    def _encode_url(alias, margin=1, size=72, dpr=1.0) -> str:
         params = dict(margin=margin, size=size, dpr=dpr)
         query_string = urlencode(params)
         components = ('twemoji', alias, '', '', query_string, '')
-        return QUrl(urlunparse(components))
+        return str(urlunparse(components))
 
     def _calculate_emoji_size(self, cursor: QTextCursor) -> int:
         """Calculates the emoji size based on configuration or font."""
@@ -172,108 +174,44 @@ class QTwemojiTextDocument(QTextDocument):
         text = block.text()
         block_pos = block.position()
 
-        # 2. Searches for emojis only in this short text
-        matches = EmojiFinder.find_all_emoji(text)
-
-        if not matches:
-            return
-
-        cursor = QTextCursor(self)
-        margin = self._emoji_margin
-
-        # 4. Starts edit block for atomic Undo/Redo
-        cursor.beginEditBlock()
-
-        # Process in reverse order (from end of line to start)
-        for match in reversed(matches):
-            start_rel = match.capturedStart(0)
-            end_rel = match.capturedEnd(0)
-
-            # Converts relative block position to absolute document position
-            abs_start = block_pos + start_rel
-            abs_end = block_pos + end_rel
-
-            cursor.setPosition(abs_start)
-            cursor.setPosition(abs_end, QTextCursor.MoveMode.KeepAnchor)
-
-            emoji_size = self._calculate_emoji_size(cursor)
-
-            emoji_str = match.captured(0)
-            emoji_without_color = self._remove_emoji_color(emoji_str)
-            emoji_obj = get_emoji_by_code(emoji_without_color)
-
-            if emoji_obj:
-                self._ensure_resource_loaded(emoji_obj, emoji_size, margin)
-                image_fmt = self._emoji_to_text_image(emoji_obj, emoji_size, margin)
-
-                with QSignalBlocker(self):
-                    cursor.insertImage(image_fmt)
-
-        cursor.endEditBlock()
+        for emoji, match in self.__reverse_generator(EmojiFinder.find_all_emoji_objects(text, True)):
+            image_fmt = self._emoji_to_text_image(emoji)
+            self._replace_match(match, image_fmt, block_pos)
 
     def _twemojize_full(self):
         """Full version for use at initialization (total scan)."""
-        cursor = QTextCursor(self)
-        margin = self._emoji_margin
-
-        # Uses the old logic of scanning everything (_localize_emojis returns reversed list)
-        for emoji, match in reversed(EmojiFinder.find_all_emoji_objects(super().toPlainText(), True)):
-            cursor.setPosition(match.capturedStart(0), QTextCursor.MoveMode.MoveAnchor)
-            cursor.setPosition(match.capturedEnd(0), QTextCursor.MoveMode.KeepAnchor)
-
-            emoji_size = self._calculate_emoji_size(cursor)
-
-            self._ensure_resource_loaded(emoji, emoji_size, margin)
-            image_fmt = self._emoji_to_text_image(emoji, emoji_size, margin)
-
-            with QSignalBlocker(self):
-                cursor.insertImage(image_fmt)
+        for emoji, match in self.__reverse_generator(EmojiFinder.find_all_emoji_objects(super().toPlainText(), True)):
+            image_fmt = self._emoji_to_text_image(emoji)
+            self._replace_match(match, image_fmt)
 
     def updateEmojiImages(self):
         """Updates the margin and size of existing emoji images without converting to text."""
-        cursor = QTextCursor(self)
-        cursor.beginEditBlock()
+        for fragment in self.__reverse_generator(self.emoji_fragments()):
+            emoji = self._text_image_to_emoji(fragment.charFormat().toImageFormat())
+            new_img_fmt = self._emoji_to_text_image(emoji)
+            self._replace_match(fragment, new_img_fmt)
 
-        for img_fmt, start, end in self._localize_emoji_images():
-            cursor.setPosition(start)
-            cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
-
-            emoji = self._text_image_to_emoji(img_fmt)
-            if emoji:
-                # Recalculate size based on current font height at cursor position or fixed size
-                emoji_size = self._calculate_emoji_size(cursor)
-                margin = self._emoji_margin
-
-                self._ensure_resource_loaded(emoji, emoji_size, margin)
-                new_img_fmt = self._emoji_to_text_image(emoji, emoji_size, margin)
-
-                cursor.insertImage(new_img_fmt)
-
-        cursor.endEditBlock()
-
-    def __replace_alias(self):
+    def _replace_alias(self):
         """
         Alias replacement (:smile:).
         Could also be optimized for _last_change_pos, but alias is less frequent.
         Kept global logic for safety, or the same logic as _twemojize could be applied.
         """
-        for emoji, match in reversed(EmojiFinder.find_all_emoji_aliases(super().toPlainText())):
+        for emoji, match in self.__reverse_generator(EmojiFinder.find_all_emoji_aliases(super().toPlainText())):
             if self._twemoji:
-                emoji_size = self._calculate_emoji_size(cursor)
-                self._ensure_resource_loaded(emoji, emoji_size, self._emoji_margin)
-                image_fmt = self._emoji_to_text_image(emoji, emoji_size, self._emoji_margin)
+                image_fmt = self._emoji_to_text_image(emoji)
                 self._replace_match(match, image_fmt)
             else:
                 self._replace_match(match, emoji.emoji)
 
-    def _replace_match(self, match: typing.Union[QRegularExpressionMatch, QTextFragment], content: typing.Union[str, QTextImageFormat]):
+    def _replace_match(self, match: typing.Union[QRegularExpressionMatch, QTextFragment], content: typing.Union[str, QTextImageFormat], offset: int = 0):
         cursor = QTextCursor(self)
 
         start = match.position() if isinstance(match, QTextFragment) else match.capturedStart(0)
         end = match.position() + match.length() if isinstance(match, QTextFragment) else match.capturedEnd(0)
 
-        cursor.setPosition(start, QTextCursor.MoveMode.MoveAnchor)
-        cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
+        cursor.setPosition(start + offset)
+        cursor.setPosition(end + offset, QTextCursor.MoveMode.KeepAnchor)
 
         with QSignalBlocker(self):
             if isinstance(content, QTextImageFormat):
@@ -298,9 +236,15 @@ class QTwemojiTextDocument(QTextDocument):
                     cursor.deletePreviousChar()
 
     def toPlainText(self) -> str:
+        return self._to_plain_text()
+
+    def _to_plain_text(self, first_block: typing.Optional[QTextBlock] = None, last_block: typing.Optional[QTextBlock] = None, selection_cursor: typing.Optional[QTextCursor] = None) -> str:
         result = ""
-        for block in self._blocks():
+        for block in self._blocks(first_block, last_block):
             for frag in self._fragments(block):
+                if selection_cursor and not self._is_fragment_selected(selection_cursor, frag):
+                    continue
+
                 if self._is_emoji_frag(frag):
                     image_format = frag.charFormat().toImageFormat()
                     emoji = self._text_image_to_emoji(image_format)
@@ -314,31 +258,24 @@ class QTwemojiTextDocument(QTextDocument):
 
     # --- Regex and Color Helpers ---
 
-    def _localize_emoji_images(self):
-        emoji_images = []
-        for frag in self.emoji_fragments():
-            img_fmt = frag.charFormat().toImageFormat()
-            emoji_images.insert(0, (img_fmt, frag.position(), frag.position() + frag.length()))
-        return emoji_images
-
-    def fragments(self):
-        for block in self._blocks():
-            for frag in self._fragments(block):
-                yield frag
-
-    def emoji_fragments(self):
-        for frag in self.fragments():
+    def emoji_fragments(self, block: QTextBlock) -> typing.Generator[QTextFragment, None, None]:
+        for frag in self._fragments(block):
             if self._is_emoji_frag(frag):
                 yield frag
 
-    def _blocks(self):
-        block = self.firstBlock()
+    def _blocks(self, first_block: typing.Optional[QTextBlock] = None, last_block: typing.Optional[QTextBlock] = None) -> typing.Generator[QTextBlock, None, None]:
+        if first_block is None:
+            block = self.firstBlock()
+        else:
+            block = first_block
         while block.isValid():
             yield block
+            if block == last_block:
+                break
             block = block.next()
 
     @staticmethod
-    def _fragments(block):
+    def _fragments(block: QTextBlock) -> typing.Generator[QTextFragment, None, None]:
         it = block.begin()
         while not it.atEnd():
             frag = it.fragment()
@@ -355,13 +292,16 @@ class QTwemojiTextDocument(QTextDocument):
         return False
 
     def _detwemojize(self):
-        cursor = QTextCursor(self)
-        for img_fmt, start, end in self._localize_emoji_images():
-            cursor.setPosition(start)
-            cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
-            emoji = self._text_image_to_emoji(img_fmt)
-            if emoji:
-                cursor.insertText(emoji.emoji)
+        for fragment in self.__reverse_generator(self.emoji_fragments()):
+            emoji = self._text_image_to_emoji(fragment.charFormat().toImageFormat())
+            self._replace_match(fragment, emoji.emoji)
+
+    @staticmethod
+    def __reverse_generator(generator: typing.Generator[T, None, None]) -> typing.List[T]:
+        result = []
+        for item in generator:
+            result.insert(0, item)
+        return result
 
     @staticmethod
     def _font_height(cursor: QTextCursor):
@@ -369,32 +309,16 @@ class QTwemojiTextDocument(QTextDocument):
         fm = QFontMetrics(font)
         return fm.height()
 
-    @staticmethod
-    def _get_emoji_colors(emoji: str) -> typing.Set[str]:
-        # Iterator correction applied here too
-        re_color = QRegularExpression(R"[\x{1F3FB}-\x{1F3FF}]")
-        iterator = re_color.globalMatch(emoji)
-        matches = set()
-        while iterator.hasNext():
-            match = iterator.next()
-            matches.add(match.captured(0))
-        return matches
-
-    def _remove_emoji_color(self, emoji: str) -> str:
-        for color in self._get_emoji_colors(emoji):
-            emoji = emoji.replace(color, "")
-        return emoji
-
-    @staticmethod
-    def _emoji_to_text_image(emoji: Emoji, height: int, margin: int) -> QTextImageFormat:
+    def _emoji_to_text_image(self, emoji: Emoji) -> QTextImageFormat:
+        cursor = QTextCursor(self)
+        emoji_size = self._calculate_emoji_size(cursor)
+        self._ensure_resource_loaded(emoji, emoji_size, self._emoji_margin)
         image = QTextImageFormat()
         if emoji and emoji.aliases:
-            name = f"twemoji://{emoji.aliases[0]}"
-            if margin > 0:
-                name += f"?m={margin}"
+            name = self._encode_url(emoji.aliases[0], self._emoji_margin, emoji_size)
             image.setName(name)
             image.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignMiddle)
-            total_size = height + (margin * 2)
+            total_size = emoji_size + (self._emoji_margin * 2)
             image.setHeight(total_size)
             image.setWidth(total_size)
             image.setQuality(100)
@@ -415,10 +339,15 @@ class QTwemojiTextDocument(QTextDocument):
         frag_end = frag_start + fragment.length()
         return sel_end > frag_start and sel_start < frag_end
 
-    def setDefaultFont(self, font):
+    def setDefaultFont(self, font: QFont) -> None:
         """Override setDefaultFont to trigger emoji resize when font changes."""
         super().setDefaultFont(font)
         if self._twemoji and self._emoji_size == -1:
             # We reuse updateEmojiImages logic which recalculates size based on font
             with QSignalBlocker(self):
                 self.updateEmojiImages()
+
+    def selectionToPlainText(self, cursor: QTextCursor) -> typing.Optional[str]:
+        first_block = self.findBlock(cursor.selectionStart())
+        last_block = self.findBlock(cursor.selectionEnd())
+        return self._to_plain_text(first_block, last_block, cursor)
