@@ -1,59 +1,148 @@
 import re
+import typing
 
 from PySide6.QtCore import QModelIndex, Qt, QPoint, QSize
-from PySide6.QtGui import QPainter, QPalette
-from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QApplication, QStyle
+from PySide6.QtGui import QPainter, QPalette, QFontMetrics
+from PySide6.QtWidgets import (
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
+    QStyle,
+)
 from emojis import emojis
 
 from qextrawidgets.emoji_utils import EmojiImageProvider
 
 
 class QStandardTwemojiDelegate(QStyledItemDelegate):
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
+    """
+    Delegate that renders text with Twemoji support.
+    """
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        """
+        Renders the delegate using the given painter and style option.
+
+        Args:
+            painter (QPainter): The painter to use.
+            option (QStyleOptionViewItem): The style option.
+            index (QModelIndex): The model index.
+        """
         painter.save()
 
-        options = QStyleOptionViewItem(option)
-        style = options.widget.style() if options.widget else QApplication.style()
+        opt = QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
 
-        options.features &= ~QStyleOptionViewItem.HasDisplay
-        style.drawControl(QStyle.CE_ItemViewItem, options, painter, options.widget)
+        widget = getattr(opt, "widget")
 
-        text = index.data(Qt.DisplayRole)
-        fm = option.fontMetrics
+        style = widget.style()
 
-        pen_color = option.palette.color(
-            QPalette.HighlightedText
-            if option.state & QStyle.State_Selected
-            else QPalette.Text
+        # Draws background, selection, focus, etc.
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, option, painter, getattr(option, "widget"))
+
+        # ===== data =====
+        text: str = getattr(opt, "text")
+        fm: QFontMetrics = getattr(opt, "fontMetrics")
+        alignment: Qt.AlignmentFlag = getattr(opt, "displayAlignment")
+        palette: QPalette = getattr(opt, "palette")
+        state: QStyle.StateFlag = getattr(opt, "state")
+
+        painter.setPen(
+            palette.color(
+                QPalette.ColorRole.HighlightedText
+                if state & QStyle.StateFlag.State_Selected
+                else QPalette.ColorRole.Text
+            )
         )
-        painter.setPen(pen_color)
 
-        # Dentro do paint()
-        style = option.widget.style()
+        # ===== real text area =====
+        text_rect = style.subElementRect(
+            QStyle.SubElement.SE_ItemViewItemText, opt, widget
+        )
 
-        # Pede o retângulo exato onde o texto deve ficar
-        text_rect = style.subElementRect(QStyle.SE_ItemViewItemText, option, option.widget)
+        blocks = self.get_text_blocks(text)
 
-        # Calculate baseline
-        text_cursor = QPoint(text_rect.left(), text_rect.top() + fm.ascent())
-        image_cursor = QPoint(text_rect.left(), text_rect.top())
-
-        text = index.data(Qt.ItemDataRole.EditRole)
-        for block in self.get_text_blocks(text):
-            emoji = emojis.db.get_emoji_by_code(block)
-            if emoji:
-                emoji_size = QSize(fm.height(), fm.height())
-                pixmap = EmojiImageProvider.getPixmap(emoji, 0, emoji_size, painter.device().devicePixelRatio())
-                painter.drawPixmap(image_cursor, pixmap)
-                horizontal_advance = emoji_size.width()
+        # ===== total width =====
+        emoji_size = QSize(fm.ascent(), fm.ascent())
+        total_width = 0
+        for block in blocks:
+            if isinstance(block, emojis.db.Emoji):
+                total_width += emoji_size.width()
             else:
-                horizontal_advance = fm.horizontalAdvance(block)
+                total_width += fm.horizontalAdvance(block)
+
+        # ===== horizontal alignment =====
+        if alignment & Qt.AlignmentFlag.AlignHCenter:
+            offset_x = max((text_rect.width() - total_width) // 2, 0)
+        elif alignment & Qt.AlignmentFlag.AlignRight:
+            offset_x = max(text_rect.width() - total_width, 0)
+        else:
+            offset_x = 0
+
+        # ===== vertical alignment =====
+        font_height = fm.height()
+
+        if alignment & Qt.AlignmentFlag.AlignVCenter:
+            base_y = (
+                text_rect.top()
+                + (text_rect.height() - font_height) // 2
+                + fm.ascent()
+            )
+            img_y = (
+                text_rect.top()
+                + (text_rect.height() - font_height) // 2
+            )
+        elif alignment & Qt.AlignmentFlag.AlignBottom:
+            base_y = text_rect.bottom() - fm.descent()
+            img_y = text_rect.bottom() - font_height
+        else:
+            base_y = text_rect.top() + fm.ascent()
+            img_y = text_rect.top()
+
+        text_cursor = QPoint(text_rect.left() + offset_x, base_y)
+        image_cursor = QPoint(text_rect.left() + offset_x, img_y)
+
+        # ===== drawing =====
+        for block in blocks:
+            if isinstance(emoji := block, emojis.db.Emoji):
+                pixmap = EmojiImageProvider.getPixmap(
+                    emoji,
+                    0,
+                    emoji_size,
+                    painter.device().devicePixelRatio(),
+                )
+                painter.drawPixmap(image_cursor, pixmap)
+                advance = emoji_size.width()
+            else:
                 painter.drawText(text_cursor, block)
-            text_cursor.setX(text_cursor.x() + horizontal_advance)
-            image_cursor.setX(image_cursor.x() + horizontal_advance)
+                advance = fm.horizontalAdvance(block)
+
+            text_cursor.setX(text_cursor.x() + advance)
+            image_cursor.setX(image_cursor.x() + advance)
 
         painter.restore()
 
     @staticmethod
-    def get_text_blocks(text: str):
-        return [block for block in re.split(emojis.RE_EMOJI_TO_TEXT, text) if block]
+    def get_text_blocks(text: str) -> typing.List[typing.Union[str, emojis.db.Emoji]]:
+        """
+        Splits the text into blocks of text and Emoji objects.
+
+        Args:
+            text (str): The input text.
+
+        Returns:
+            typing.List[typing.Union[str, emojis.db.Emoji]]: A list of text blocks and Emoji objects.
+        """
+        result = []
+        for text_block in re.split(emojis.RE_EMOJI_TO_TEXT, text):
+            text_block = QStandardTwemojiDelegate._remove_emoji_color(text_block)
+            if text_block:
+                emoji = emojis.db.get_emoji_by_code(text_block)
+                if emoji:
+                    result.append(emoji)
+                else:
+                    result.append(text_block)
+        return result
+
+    @staticmethod
+    def _remove_emoji_color(text: str) -> str:
+        return re.sub(r"[\U0001F3FB-\U0001F3FF]", "", text)
