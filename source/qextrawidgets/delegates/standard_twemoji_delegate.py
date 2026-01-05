@@ -81,7 +81,13 @@ class QStandardTwemojiDelegate(QStyledItemDelegate):
         # ===== vertical alignment =====
         font_height = fm.height()
 
-        if alignment & Qt.AlignmentFlag.AlignVCenter:
+        if alignment & Qt.AlignmentFlag.AlignTop:
+            base_y = text_rect.top() + fm.ascent()
+            img_y = text_rect.top()
+        elif alignment & Qt.AlignmentFlag.AlignBottom:
+            base_y = text_rect.bottom() - fm.descent()
+            img_y = text_rect.bottom() - font_height
+        else:
             base_y = (
                 text_rect.top()
                 + (text_rect.height() - font_height) // 2
@@ -91,12 +97,6 @@ class QStandardTwemojiDelegate(QStyledItemDelegate):
                 text_rect.top()
                 + (text_rect.height() - font_height) // 2
             )
-        elif alignment & Qt.AlignmentFlag.AlignBottom:
-            base_y = text_rect.bottom() - fm.descent()
-            img_y = text_rect.bottom() - font_height
-        else:
-            base_y = text_rect.top() + fm.ascent()
-            img_y = text_rect.top()
 
         text_cursor = QPoint(text_rect.left() + offset_x, base_y)
         image_cursor = QPoint(text_rect.left() + offset_x, img_y)
