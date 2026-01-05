@@ -19,7 +19,7 @@ class QColorButton(QPushButton):
         self.setCheckedColor(checked_color)
 
         # Initial visual configuration
-        self.setAutoFillBackground(True)
+        # Removed setAutoFillBackground(True) to avoid square background artifacts on rounded buttons
 
     def initStyleOption(self, option: QStyleOptionButton):
         """
@@ -42,16 +42,14 @@ class QColorButton(QPushButton):
         if state & QStyle.StateFlag.State_Sunken:  # Pressed
             pressed_color = base_color.darker(115)  # 15% darker
             palette.setColor(QPalette.ColorRole.Button, pressed_color)
-            palette.setColor(QPalette.ColorRole.Window, pressed_color)  # For background fill
+            # Removed Window role setting as it's not needed for button face and causes artifacts
 
         elif state & QStyle.StateFlag.State_MouseOver:  # Mouse over
             hover_color = base_color.lighter(115)  # 15% lighter
             palette.setColor(QPalette.ColorRole.Button, hover_color)
-            palette.setColor(QPalette.ColorRole.Window, hover_color)
 
         else:  # Normal State (or Checked State if not interacting)
             palette.setColor(QPalette.ColorRole.Button, base_color)
-            palette.setColor(QPalette.ColorRole.Window, base_color)
 
         if self._text_color is None:
             palette.setColor(QPalette.ColorRole.ButtonText, self.getContrastingTextColor(base_color))
