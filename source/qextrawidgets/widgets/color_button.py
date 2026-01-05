@@ -1,19 +1,22 @@
 import typing
 
-from PySide6.QtWidgets import QPushButton, QStyleOptionButton, QStyle
-from PySide6.QtGui import QPalette, QColor
+from PySide6.QtGui import QPalette, QColor, QColorConstants
+from PySide6.QtWidgets import QPushButton, QStyleOptionButton, QStyle, QWidget
 
 
 class QColorButton(QPushButton):
-    def __init__(self, text, color, text_color = "auto", parent = None):
+    def __init__(self, text: str, color: QColor, text_color: QColor = None, checked_color: QColor = None,
+                 parent: QWidget = None):
         super().__init__(text, parent)
 
         # We store colors as class attributes
         self._color = None
         self._text_color = None
+        self._checked_color = None
 
         self.setColor(color)
         self.setTextColor(text_color)
+        self.setCheckedColor(checked_color)
 
         # Initial visual configuration
         self.setAutoFillBackground(True)
@@ -30,23 +33,28 @@ class QColorButton(QPushButton):
         state: QStyle.StateFlag = getattr(option, 'state')
         palette: QPalette = getattr(option, 'palette')
 
+        # Determine the base color to use (Normal or Checked)
+        base_color = self._color
+        if (state & QStyle.StateFlag.State_On) and self._checked_color is not None:
+            base_color = self._checked_color
+
         # 2. Check the state in the 'option' object and change the palette color locally
         if state & QStyle.StateFlag.State_Sunken:  # Pressed
-            pressed_color = self._color.darker(115)  # 15% darker
+            pressed_color = base_color.darker(115)  # 15% darker
             palette.setColor(QPalette.ColorRole.Button, pressed_color)
             palette.setColor(QPalette.ColorRole.Window, pressed_color)  # For background fill
 
         elif state & QStyle.StateFlag.State_MouseOver:  # Mouse over
-            hover_color = self._color.lighter(115)  # 15% lighter
+            hover_color = base_color.lighter(115)  # 15% lighter
             palette.setColor(QPalette.ColorRole.Button, hover_color)
             palette.setColor(QPalette.ColorRole.Window, hover_color)
 
-        else:  # Normal State
-            palette.setColor(QPalette.ColorRole.Button, self._color)
-            palette.setColor(QPalette.ColorRole.Window, self._color)
+        else:  # Normal State (or Checked State if not interacting)
+            palette.setColor(QPalette.ColorRole.Button, base_color)
+            palette.setColor(QPalette.ColorRole.Window, base_color)
 
-        if self._text_color == "auto":
-            palette.setColor(QPalette.ColorRole.ButtonText, self.getContrastingTextColor(self._color))
+        if self._text_color is None:
+            palette.setColor(QPalette.ColorRole.ButtonText, self.getContrastingTextColor(base_color))
 
         else:
             palette.setColor(QPalette.ColorRole.ButtonText, self._text_color)
@@ -54,26 +62,26 @@ class QColorButton(QPushButton):
     def color(self) -> QColor:
         return self._color
 
-    def setColor(self, color):
-        if isinstance(color, str):
-            self._color = QColor(color)
+    def setColor(self, color: QColor):
+        self._color = QColor(color)
 
-        elif isinstance(color, QColor):
-            self._color = color
+    def checkedColor(self) -> typing.Optional[QColor]:
+        return self._checked_color
+
+    def setCheckedColor(self, color: typing.Union[str, QColor]):
+        if color is None:
+            self._checked_color = None
+        else:
+            self._checked_color = QColor(color)
 
     def textColor(self) -> typing.Union[str, QColor]:
         return self._text_color
 
-    def setTextColor(self, text_color):
-        if isinstance(text_color, str):
-            if text_color == "auto":
-                self._text_color = text_color
-
-            else:
-                self._text_color = QColor(text_color)
-
-        elif isinstance(text_color, QColor):
+    def setTextColor(self, text_color: typing.Union[str, QColor, None]):
+        if text_color is None:
             self._text_color = text_color
+        else:
+            self._text_color = QColor(text_color)
 
     @staticmethod
     def getContrastingTextColor(bg_color: QColor) -> QColor:
@@ -92,4 +100,4 @@ class QColorButton(QPushButton):
         # Common threshold is 128 (half of 255).
         # If brighter than 128, background is light -> Black Text
         # If darker, background is dark -> White Text
-        return QColor("black") if luminance > 128 else QColor("white")
+        return QColorConstants.Black if luminance > 128 else QColorConstants.White
