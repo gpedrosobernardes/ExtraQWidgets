@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QStyle
 from qextrawidgets.emoji_utils import EmojiImageProvider
 
 
-class EmojiDelegate(QStyledItemDelegate):
+class QLazyLoadingEmojiDelegate(QStyledItemDelegate):
     """
     Renders the Emoji. If it's an image, draws the Pixmap.
     If it's font, draws the text. This saves memory compared to creating QIcons.

@@ -13,7 +13,7 @@ T = typing.TypeVar('T')
 
 class QTwemojiTextDocument(QTextDocument):
 
-    def __init__(self, parent=None, twemoji=True, alias_replacement=True, emoji_margin=1):
+    def __init__(self, parent=None, twemoji=True, alias_replacement=True, emoji_margin=1, dpr=1.0):
         super().__init__(parent)
 
         self._twemoji = False
@@ -24,6 +24,7 @@ class QTwemojiTextDocument(QTextDocument):
         self._limit_line_signal = None
         self._emoji_margin = emoji_margin
         self._emoji_size = -1  # -1 means auto (based on font size)
+        self._dpr = dpr
 
         # Variable to track where the edit occurred (Optimization B)
         self._last_change_pos = 0
@@ -35,6 +36,12 @@ class QTwemojiTextDocument(QTextDocument):
         self.contentsChange.connect(self._on_contents_change)
 
     # --- Configurations ---
+
+    def devicePixelRatio(self):
+        return self._dpr
+
+    def setDevicePixelRatio(self, dpr: float):
+        self._dpr = dpr
 
     def lineLimit(self) -> int:
         return self._line_limit
@@ -120,14 +127,12 @@ class QTwemojiTextDocument(QTextDocument):
 
         size_obj = QSize(size, size)
 
-        dpr = self.parent().devicePixelRatio()
-
-        url = EmojiImageProvider.getUrl(emoji.aliases[0], margin, size_obj, dpr)
+        url = EmojiImageProvider.getUrl(emoji.aliases[0], margin, size_obj, self._dpr)
 
         if self.resource(QTextDocument.ResourceType.ImageResource, url):
             return
 
-        pixmap = EmojiImageProvider.getPixmap(emoji, margin, size_obj, dpr)
+        pixmap = EmojiImageProvider.getPixmap(emoji, margin, size_obj, self._dpr)
 
         if not pixmap.isNull():
             self.addResource(QTextDocument.ResourceType.ImageResource, url, pixmap)
@@ -301,8 +306,7 @@ class QTwemojiTextDocument(QTextDocument):
         self._ensure_resource_loaded(emoji, emoji_size, self._emoji_margin)
         image = QTextImageFormat()
         if emoji and emoji.aliases:
-            dpr = self.parent().devicePixelRatio()
-            url = EmojiImageProvider.getUrl(emoji.aliases[0], self._emoji_margin, size, dpr)
+            url = EmojiImageProvider.getUrl(emoji.aliases[0], self._emoji_margin, size, self._dpr)
             image.setName(url.toString())
             image.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignMiddle)
             total_size = emoji_size + (self._emoji_margin * 2)
@@ -338,3 +342,12 @@ class QTwemojiTextDocument(QTextDocument):
         first_block = self.findBlock(cursor.selectionStart())
         last_block = self.findBlock(cursor.selectionEnd())
         return self._to_plain_text(first_block, last_block, cursor)
+
+    def setPlainText(self, text, /):
+        super().setPlainText(text)
+        if self._twemoji:
+            self._twemojize_full()
+        else:
+            self._detwemojize()
+        if self._alias_replacement:
+            self._replace_alias()

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QListView, QAbstractScrollArea, QSizePolicy
 from emojis.db import Emoji
 
 from qextrawidgets.proxys.emoji_sort_filter import EmojiSortFilterProxyModel
-from qextrawidgets.widgets.emoji_picker.emoji_delegate import EmojiDelegate
+from qextrawidgets.widgets.emoji_picker.emoji_delegate import QLazyLoadingEmojiDelegate
 
 
 class QEmojiGrid(QListView):
@@ -39,7 +39,7 @@ class QEmojiGrid(QListView):
         self.setGridSize(QSize(40, 40))
 
         # Performance configuration
-        self.setItemDelegate(EmojiDelegate(self))
+        self.setItemDelegate(QLazyLoadingEmojiDelegate(self))
 
         # Default settings
         self.setViewMode(QListView.ViewMode.IconMode)
