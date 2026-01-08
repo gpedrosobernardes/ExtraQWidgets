@@ -243,7 +243,7 @@ class QEmojiPicker(QWidget):
         """Resets picker state."""
         self.__line_edit.clear()
         # Scroll to top
-        self._accordion.scroll.verticalScrollBar().setValue(0)
+        self._accordion.resetScroll()
 
     def addCategory(self, category: EmojiCategory, shortcut_position: int = -1, section_position: int = -1):
         self.__categories_data[category.name()] = category
