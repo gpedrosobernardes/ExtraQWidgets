@@ -51,9 +51,19 @@ class QAccordion(QWidget):
                 self._active_section = item
                 break
 
+    def _on_item_expanded(self, position: int, expanded: bool):
+        """Called when an item is expanded."""
+        self.scroll_layout.setStretch(position, expanded)
+
     # --- Item Management ---
 
-    def addSection(self, title: str, widget: QWidget, position: int = -1) -> QAccordionItem:
+    def addSection(self, title: str, widget: QWidget):
+        self.insertSection(title, widget)
+
+    def addAccordionItem(self, item: QAccordionItem):
+        self.insertAccordionItem(item)
+
+    def insertSection(self, title: str, widget: QWidget, position: int = -1) -> QAccordionItem:
         """
         Creates and adds a new accordion section.
 
@@ -68,10 +78,10 @@ class QAccordion(QWidget):
         item.setAnimationDuration(self._default_animation_duration)
         item.setAnimationEasing(self._default_animation_easing)
 
-        self.addAccordionItem(item, position)
+        self.insertAccordionItem(item, position)
         return item
 
-    def addAccordionItem(self, item: QAccordionItem, position: int = -1):
+    def insertAccordionItem(self, item: QAccordionItem, position: int = -1):
         """
         Adds an existing QAccordionItem.
 
@@ -79,6 +89,7 @@ class QAccordion(QWidget):
         :param position: Insert position (-1 for end)
         """
         self.scroll_layout.insertWidget(position, item)
+        item.expandedChanged.connect(lambda expanded: self._on_item_expanded(position, expanded))
         self.items.append(item)
 
     def removeAccordionItem(self, item: QAccordionItem):

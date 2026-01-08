@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
 
 from qextrawidgets.icons import QThemeResponsiveIcon
 from qextrawidgets.widgets.extra_text_edit import QExtraTextEdit
+from qextrawidgets.validators import QEmojiValidator
 
 
 class DemoTextEditWindow(QMainWindow):
@@ -29,10 +30,12 @@ class DemoTextEditWindow(QMainWindow):
         self._chk_responsive = None
         self._chk_twemoji = None
         self._chk_aliases = None
+        self._chk_validator = None
         self._spin_max_height = None
         self._spin_emoji_margin = None
         self._spin_font_size = None
         self._lbl_status = None
+        self._emoji_validator = None
 
         self._setup_ui()
         self._connect_signals()
@@ -45,6 +48,7 @@ class DemoTextEditWindow(QMainWindow):
             "<li>Type <b>:smile:</b>, <b>:rocket:</b> or <b>:heart:</b> to test aliases.</li>"
             "<li>Paste a real emoji (e.g., 🔥, 😂) to test Unicode replacement.</li>"
             "<li>Type multiple lines to see the field grow (Responsiveness).</li>"
+            "<li>Enable the <b>Validator</b> to restrict input to emojis only.</li>"
             "</ul>"
         )
         lbl_intro.setWordWrap(True)
@@ -53,6 +57,7 @@ class DemoTextEditWindow(QMainWindow):
         # 2. The Main Widget (QExtraTextEdit)
         self._text_edit = QExtraTextEdit()
         self._text_edit.setPlaceholderText("Type here... Try :100: or paste an emoji.")
+
         # Define an initial maximum height to demonstrate scrolling
         self._text_edit.setMaximumHeight(150)
 
@@ -81,6 +86,10 @@ class DemoTextEditWindow(QMainWindow):
         self._chk_aliases = QCheckBox("Replace Aliases (e.g., :smile:)")
         self._chk_aliases.setChecked(self._text_edit.document().aliasReplacement())
 
+        # Toggle: Emoji Validator
+        self._chk_validator = QCheckBox("Enable Emoji Validator (Emojis Only)")
+        self._chk_validator.setChecked(False)
+
         # Control: Emoji Margin
         self._spin_emoji_margin = QSpinBox()
         self._spin_emoji_margin.setRange(0, 50)
@@ -97,6 +106,7 @@ class DemoTextEditWindow(QMainWindow):
         layout_controls.addRow("Maximum Height:", self._spin_max_height)
         layout_controls.addRow(self._chk_twemoji)
         layout_controls.addRow(self._chk_aliases)
+        layout_controls.addRow(self._chk_validator)
         layout_controls.addRow("Emoji Margin:", self._spin_emoji_margin)
         layout_controls.addRow("Font Size:", self._spin_font_size)
 
@@ -122,8 +132,21 @@ class DemoTextEditWindow(QMainWindow):
         self._chk_aliases.toggled.connect(doc.setAliasReplacement)
         self._spin_emoji_margin.valueChanged.connect(doc.setEmojiMargin)
 
+        # Connect validator
+        self._chk_validator.toggled.connect(self._toggle_validator)
+
         # Connect font size change
         self._spin_font_size.valueChanged.connect(self._change_font_size)
+
+    def _toggle_validator(self, checked: bool):
+        if checked:
+            if not self._emoji_validator:
+                self._emoji_validator = QEmojiValidator(self)
+            self._text_edit.setValidator(self._emoji_validator)
+            self._text_edit.setPlaceholderText("Only emojis allowed! (e.g. 🚀)")
+        else:
+            self._text_edit.setValidator(None)
+            self._text_edit.setPlaceholderText("Type here... Try :100: or paste an emoji.")
 
     def _change_font_size(self, size):
         document = self._text_edit.document()

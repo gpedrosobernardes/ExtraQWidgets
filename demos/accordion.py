@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         """Adds varied sections to demonstrate versatility."""
 
         # 1. Simple Widget
-        self.accordion.addSection("1. Introduction", QLabel(
+        self.accordion.insertSection("1. Introduction", QLabel(
             "This is a dynamic Accordion in PySide6.\nUse the left panel to test."))
 
         # 2. Individual Configuration (Override)
@@ -177,7 +177,7 @@ class MainWindow(QMainWindow):
         # Here we just show that we can add and configure on the fly.
         lbl_custom = QLabel(
             "This item was added and configured individually\nwith icon on the right initially.")
-        item_custom = self.accordion.addSection("2. Manually Configured Item", lbl_custom)
+        item_custom = self.accordion.insertSection("2. Manually Configured Item", lbl_custom)
         item_custom.setIconPosition("right")
 
         # 3. Nested Layout (Buttons and actions)
@@ -186,14 +186,14 @@ class MainWindow(QMainWindow):
         layout_actions.addWidget(QPushButton("Action 1"))
         layout_actions.addWidget(QPushButton("Action 2"))
         layout_actions.addWidget(QPushButton("Action 3"))
-        self.accordion.addSection("3. Button Container", widget_actions)
+        self.accordion.insertSection("3. Button Container", widget_actions)
 
         # 4. Long Text (To test Scroll)
         long_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n" * 20
         txt_edit = QTextEdit()
         txt_edit.setPlainText(long_text)
         txt_edit.setMinimumHeight(200)  # Force height to test accordion scroll
-        self.item_long_text = self.accordion.addSection("4. Long Content (Scroll Test)", txt_edit)
+        self.item_long_text = self.accordion.insertSection("4. Long Content (Scroll Test)", txt_edit)
 
         # 5. Complex Form
         form_widget = QWidget()
@@ -201,11 +201,11 @@ class MainWindow(QMainWindow):
         form_layout.addRow("Name:", QLineEdit())
         form_layout.addRow("Email:", QLineEdit())
         form_layout.addRow("Accept Terms:", QCheckBox())
-        self.item_form = self.accordion.addSection("5. Registration Form", form_widget)
+        self.item_form = self.accordion.insertSection("5. Registration Form", form_widget)
 
         # 6. More items to fill space
         for i in range(6, 10):
-            self.accordion.addSection(f"{i}. Extra Item", QLabel(f"Content of item {i}"))
+            self.accordion.insertSection(f"{i}. Extra Item", QLabel(f"Content of item {i}"))
 
 
 if __name__ == '__main__':

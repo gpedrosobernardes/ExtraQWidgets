@@ -258,7 +258,7 @@ class QEmojiPicker(QWidget):
 
         # Category Section
         section = category.accordionItem()
-        self.__accordion.addAccordionItem(section, section_position)
+        self.__accordion.insertAccordionItem(section, section_position)
 
         shortcut = category.shortcut()
         self._shortcuts_layout.insertWidget(shortcut_position, shortcut)

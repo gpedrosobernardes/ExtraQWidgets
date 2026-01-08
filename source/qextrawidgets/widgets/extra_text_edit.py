@@ -1,4 +1,5 @@
 from PySide6.QtCore import QMimeData, QSize, Qt
+from PySide6.QtGui import QKeyEvent, QValidator
 from PySide6.QtWidgets import QTextEdit, QSizePolicy
 
 # Ensure the import is correct for your project
@@ -10,9 +11,10 @@ class QExtraTextEdit(QTextEdit):
         super().__init__(parent)
 
         # Document Configuration
-        self.setDocument(QTwemojiTextDocument(self))
+        self.setDocument(QTwemojiTextDocument(self, dpr=self.devicePixelRatio()))
 
         # Private Variables
+        self._validator = None
         self._max_height = 16777215  # QWIDGETSIZE_MAX (Qt Default)
         self._responsive = False
 
@@ -93,6 +95,12 @@ class QExtraTextEdit(QTextEdit):
         # The constraint is applied logically in sizeHint
         self.updateGeometry()
 
+    def setValidator(self, validator: QValidator):
+        self._validator = validator
+
+    def validator(self) -> QValidator:
+        return self._validator
+
     # --- Internal Logic ---
 
     def _on_text_changed(self):
@@ -112,3 +120,35 @@ class QExtraTextEdit(QTextEdit):
             self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         else:
             self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if self._validator is None:
+            return super().keyPressEvent(event)
+
+        # Step A: Allow control keys (Backspace, Delete, Enter, Arrows, Tab, Ctrl+C, etc.)
+        # If not done, the editor becomes unusable (cannot delete or navigate).
+        is_control = (
+                event.key() in (Qt.Key.Key_Backspace, Qt.Key.Key_Delete, Qt.Key.Key_Return,
+                                Qt.Key.Key_Enter, Qt.Key.Key_Tab, Qt.Key.Key_Left, Qt.Key.Key_Right,
+                                Qt.Key.Key_Up, Qt.Key.Key_Down) or
+                event.modifiers() & Qt.KeyboardModifier.ControlModifier  # Allows shortcuts like Ctrl+C
+        )
+
+        if is_control:
+            return super().keyPressEvent(event)
+
+        text = event.text()
+
+        state, _, _ = self._validator.validate(text, 0)
+
+        if state == QValidator.State.Acceptable:
+            super().keyPressEvent(event)
+        return None
+
+    def insertFromMimeData(self, source: QMimeData):
+        if source.hasText() and self._validator is not None:
+            state, _, _ = self._validator.validate(source.text(), 0)
+            if state == QValidator.State.Acceptable:
+                super().insertFromMimeData(source)
+        else:
+            super().insertFromMimeData(source)

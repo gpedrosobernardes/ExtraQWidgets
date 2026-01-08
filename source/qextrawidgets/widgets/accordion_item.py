@@ -130,6 +130,7 @@ class QAccordionItem(QWidget):
     """
     Accordion item with optional smooth expand/collapse animation.
     """
+    expandedChanged = Signal(bool)
 
     def __init__(self, title: str, content_widget: QWidget):
         super().__init__()
@@ -152,10 +153,8 @@ class QAccordionItem(QWidget):
 
         # Initial state
         self._content.setMinimumHeight(0)
-        self._content.setVisible(False)
 
         self._layout.addWidget(self._header, Qt.AlignmentFlag.AlignTop)
-        self._layout.addWidget(self._content, True, Qt.AlignmentFlag.AlignTop)
 
         self._header.clicked.connect(self.toggle)
 
@@ -182,7 +181,7 @@ class QAccordionItem(QWidget):
 
         if expanded:
             # Expanding
-            self._content.setVisible(True)
+            self._layout.insertWidget(1, self._content, True, Qt.AlignmentFlag.AlignTop)
 
             if use_animation:
                 target_height = self._content.sizeHint().height()
@@ -206,13 +205,13 @@ class QAccordionItem(QWidget):
                 self._animation.start()
             else:
                 # Instant collapse
-                self._content.setVisible(False)
-
+                self._layout.removeWidget(self._content)
+        self.expandedChanged.emit(expanded)
 
     def _on_collapse_finished(self):
         """Called when collapse animation finishes."""
         self._animation.finished.disconnect(self._on_collapse_finished)
-        self._content.setVisible(False)
+        self._layout.removeWidget(self._content)
 
     def isExpanded(self) -> bool:
         """Returns True if the item is expanded."""

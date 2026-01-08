@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QPushButton, QStyleOptionButton, QStyle, QWidget
 
 
 class QColorButton(QPushButton):
-    def __init__(self, text: str, color: QColor, text_color: QColor = None, checked_color: QColor = None,
+    def __init__(self, color: QColor, text: str = "", text_color: QColor = None, checked_color: QColor = None,
                  parent: QWidget = None):
         super().__init__(text, parent)
 
